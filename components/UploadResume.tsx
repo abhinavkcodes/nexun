@@ -9,6 +9,33 @@ export default function UploadResume() {
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
+  async function handleAnalyze() {
+  if (!resumeFile) return;
+
+  const formData = new FormData();
+
+  formData.append(
+    "resume",
+    resumeFile
+  );
+
+  const response = await fetch(
+    "/api/parse-resume",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  const result = await response.json();
+
+  saveResumeData({
+    fileName: result.fileName,
+    jobDescription,
+  });
+
+  router.push("/analysis");
+}
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
@@ -56,14 +83,7 @@ export default function UploadResume() {
 
       <button
         disabled={!resumeFile || !jobDescription.trim()}
-        onClick={() => {
-  saveResumeData({
-    fileName: resumeFile!.name,
-    jobDescription,
-  });
-
-  router.push("/analysis");
-}}
+        onClick={handleAnalyze}
         className="bg-blue-600 text-white px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Analyze Resume
