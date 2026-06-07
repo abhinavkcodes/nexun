@@ -9,6 +9,8 @@ export async function POST(
 
   return NextResponse.json({
     success: true,
-    fileName: file?.name,
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: file.type,
   });
 }

@@ -30,9 +30,11 @@ export default function UploadResume() {
   const result = await response.json();
 
   saveResumeData({
-    fileName: result.fileName,
-    jobDescription,
-  });
+  fileName: result.fileName,
+  fileSize: result.fileSize,
+  fileType: result.fileType,
+  jobDescription,
+});
 
   router.push("/analysis");
 }
