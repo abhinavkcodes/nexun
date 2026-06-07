@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { saveResumeData } from "../lib/storage";
 
 export default function UploadResume() {
   const router = useRouter();
@@ -55,7 +56,14 @@ export default function UploadResume() {
 
       <button
         disabled={!resumeFile || !jobDescription.trim()}
-        onClick={() => router.push("/analysis")}
+        onClick={() => {
+  saveResumeData({
+    fileName: resumeFile!.name,
+    jobDescription,
+  });
+
+  router.push("/analysis");
+}}
         className="bg-blue-600 text-white px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Analyze Resume

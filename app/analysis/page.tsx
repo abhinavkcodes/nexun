@@ -1,7 +1,4 @@
-import ATSScoreCard from "../../components/ATSScoreCard";
-import SkillGapCard from "../../components/SkillGapCard";
-import ExperienceScoreCard from "../../components/ExperienceScoreCard";
-import StarSuggestionsCard from "../../components/StarSuggestionsCard";
+import AnalysisDashboard from "../../components/AnalysisDashboard";
 
 export default function AnalysisPage() {
   return (
@@ -10,10 +7,7 @@ export default function AnalysisPage() {
         Analysis Results
       </h1>
 
-      <ATSScoreCard />
-      <SkillGapCard />
-      <ExperienceScoreCard />
-      <StarSuggestionsCard />
+      <AnalysisDashboard />
     </div>
   );
 }
