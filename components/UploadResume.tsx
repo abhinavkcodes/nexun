@@ -1,4 +1,8 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 export default function UploadResume() {
+  const router = useRouter();
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
 
@@ -30,10 +34,11 @@ export default function UploadResume() {
       </div>
 
       <button
-        className="bg-blue-600 text-white px-6 py-3 rounded"
-      >
-        Analyze Resume
-      </button>
+  onClick={() => router.push("/analysis")}
+  className="bg-blue-600 text-white px-6 py-3 rounded"
+>
+  Analyze Resume
+</button>
 
     </div>
   );
