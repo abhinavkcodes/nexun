@@ -2,42 +2,71 @@ export function analyzeResume(
   resumeText: string,
   jobDescription: string
 ) {
-  const jdWords = jobDescription
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((word) => word.length > 2);
+  const skillBank = [
+    "javascript",
+    "typescript",
+    "react",
+    "next.js",
+    "node.js",
+    "express",
+    "mongodb",
+    "postgresql",
+    "mysql",
+    "python",
+    "java",
+    "sql",
+    "aws",
+    "docker",
+    "git",
+    "github",
+    "rest api",
+    "tailwind",
+    "machine learning",
+    "artificial intelligence",
+    "langchain",
+    "django",
+  ];
 
-  const resumeLower =
-    resumeText.toLowerCase();
+  const resume = resumeText.toLowerCase();
+  const jd = jobDescription.toLowerCase();
 
-  const matchedSkills = jdWords.filter(
-    (word) =>
-      resumeLower.includes(word)
+  const matchedSkills = skillBank.filter(
+    (skill) =>
+      jd.includes(skill) &&
+      resume.includes(skill)
   );
 
-  const missingSkills = jdWords.filter(
-    (word) =>
-      !resumeLower.includes(word)
+  const missingSkills = skillBank.filter(
+    (skill) =>
+      jd.includes(skill) &&
+      !resume.includes(skill)
   );
 
   const atsScore = Math.round(
     (matchedSkills.length /
-      Math.max(jdWords.length, 1)) *
+      Math.max(
+        matchedSkills.length +
+          missingSkills.length,
+        1
+      )) *
       100
   );
 
   const suggestions = missingSkills.map(
     (skill) =>
-      `Add ${skill} experience or projects to your resume`
+      `Consider adding ${skill} experience or projects`
+  );
+
+  const strengths = matchedSkills.map(
+    (skill) =>
+      `Strong match in ${skill}`
   );
 
   return {
-    strengths: matchedSkills.map(
-  (skill) => `Strong knowledge of ${skill}`
-),
     atsScore,
-    matchedSkills: [...new Set(matchedSkills)],
-    missingSkills: [...new Set(missingSkills)],
+    matchedSkills,
+    missingSkills,
     suggestions,
+    strengths,
   };
 }
