@@ -74,25 +74,38 @@ export function analyzeResume(
       !resume.includes(skill)
   );
 
-  const atsScore = Math.round(
-    (matchedSkills.length /
-      Math.max(skills.length, 1)) *
-      100
+  const roleMatchScore = Math.round(
+  (matchedSkills.length /
+    Math.max(
+      matchedSkills.length +
+      missingSkills.length,
+      1
+    )) * 85
+);
+const adjustedRoleScore =
+  Math.min(
+    90,
+    roleMatchScore
   );
 
-  return {
-    atsScore,
-    matchedSkills,
-    missingSkills,
-
-    strengths: matchedSkills.map(
+  const strengths =
+    matchedSkills.map(
       (skill) =>
         `Strong match in ${skill}`
-    ),
+    );
 
-    suggestions: missingSkills.map(
+  const suggestions =
+    missingSkills.map(
       (skill) =>
         `Consider learning ${skill}`
-    ),
-  };
+    );
+
+  return {
+  roleMatchScore:
+    adjustedRoleScore,
+  matchedSkills,
+  missingSkills,
+  strengths,
+  suggestions,
+};
 }

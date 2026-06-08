@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { getResumeData } from "../lib/storage";
 import { analyzeResume } from "../lib/analyzer";
+import { analyzeResumeIntelligence } from "../lib/resumeIntelligence";
+import { analyzeATS }
+from "../lib/atsEngine";
 
 export default function AnalysisDashboard() {
   const [data, setData] = useState<any>(null);
@@ -19,13 +22,23 @@ export default function AnalysisDashboard() {
   data.resumeText ?? "",
   data.jobDescription ?? ""
 );
+const intelligence =
+  analyzeResumeIntelligence(
+    data.resumeText ?? ""
+  );
+  const ats = analyzeATS(
+  data.resumeText,
+  analysis,
+  intelligence
+);
+ 
 
 const atsLabel =
-  analysis.atsScore >= 85
+  ats.overallScore >= 85
     ? "Excellent Match"
-    : analysis.atsScore >= 70
+    : ats.overallScore >= 70
     ? "Good Match"
-    : analysis.atsScore >= 50
+    : ats.overallScore >= 50
     ? "Average Match"
     : "Needs Improvement";
 
@@ -61,13 +74,13 @@ const atsLabel =
     <div
       className="bg-green-500 h-4 rounded"
       style={{
-        width: `${analysis.atsScore}%`,
-      }}
+  width: `${ats.overallScore}%`,
+}}
     />
   </div>
 
   <p className="text-5xl font-bold mt-3">
-    {analysis.atsScore}%
+    {ats.overallScore}%
   </p>
   <p className="mt-2 text-lg">
   {atsLabel}
@@ -111,6 +124,22 @@ const atsLabel =
           )}
         </ul>
       </div>
+      <div className="border p-4 rounded">
+  <h2 className="font-bold text-xl">
+    Resume Weaknesses
+  </h2>
+
+  <ul className="mt-4 space-y-2">
+    {ats.weaknesses.map(
+      (item: string, index: number) => (
+        <li key={index}>
+          ⚠️ {item}
+        </li>
+      )
+    )}
+  </ul>
+</div>
+
 
       <div className="border p-4 rounded">
         <h2 className="font-bold text-xl">
@@ -118,8 +147,8 @@ const atsLabel =
         </h2>
 
         <ul className="mt-4 space-y-2">
-          {analysis.suggestions.map(
-            (item, index) => (
+          {ats.suggestions.map(
+            (item: string, index: number) => (
               <li key={index}>
                 💡 {item}
               </li>
