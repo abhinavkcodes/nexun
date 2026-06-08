@@ -1,15 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { getResumeData } from "../lib/storage";
 import { analyzeResume } from "../lib/analyzer";
 
 export default function AnalysisDashboard() {
-  const data = getResumeData();
+  const [data, setData] = useState<any>(null);
 
-const analysis = analyzeResume(
-  data?.resumeText ?? "",
-  data?.jobDescription ?? ""
-);
+  useEffect(() => {
+    const storedData = getResumeData();
+    setData(storedData);
+  }, []);
+
+  if (!data) {
+    return (
+      <div className="p-6">
+        Loading analysis...
+      </div>
+    );
+  }
+
+  const analysis = analyzeResume(
+    data.resumeText ?? "",
+    data.jobDescription ?? ""
+  );
 
   return (
     <div className="space-y-4">
