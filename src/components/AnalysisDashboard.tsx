@@ -36,6 +36,10 @@ const intelligence =
   analysis,
   intelligence
 );
+console.log("ATS OBJECT");
+console.log(ats);
+console.log("SECTION ANALYSIS");
+console.log(ats.sectionAnalysis);
  
 
 const atsLabel =

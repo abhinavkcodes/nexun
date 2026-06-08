@@ -1,3 +1,7 @@
+import {
+  analyzeSections,
+  SectionAnalysis
+} from "./sectionAnalyzer";
 export interface ATSResult {
   overallScore: number;
 
@@ -8,17 +12,20 @@ export interface ATSResult {
   metricsScore: number;
   achievementScore: number;
 
+  sectionAnalysis: SectionAnalysis;
+
   strengths: string[];
-weaknesses: string[];
-suggestions: string[];
-redFlags: string[];
-recruiterSummary: string;
+  weaknesses: string[];
+  suggestions: string[];
+  redFlags: string[];
+  recruiterSummary: string;
 }
 export function analyzeATS(
   resumeText: string,
   roleAnalysis: any,
   intelligence: any
 ): ATSResult {
+    const sectionAnalysis = analyzeSections(resumeText);
     const overallScore = Math.round(
   roleAnalysis.roleMatchScore * 0.35 +
   intelligence.structureScore * 0.15 +
@@ -31,7 +38,53 @@ export function analyzeATS(
   const redFlags: string[] = [];
   const strengths: string[] = [
     ...roleAnalysis.strengths,
-  ];
+  ];if (!sectionAnalysis.skills.found) {
+  weaknesses.push(
+    "Skills section not detected"
+  );
+
+  suggestions.push(
+    "Add a dedicated Skills section"
+  );
+}
+
+if (!sectionAnalysis.projects.found) {
+  weaknesses.push(
+    "Projects section not detected"
+  );
+
+  suggestions.push(
+    "Add a Projects section showcasing technical work"
+  );
+}
+
+if (!sectionAnalysis.certifications.found) {
+  suggestions.push(
+    "Consider adding certifications"
+  );
+}
+
+if (!sectionAnalysis.achievements.found) {
+  suggestions.push(
+    "Add achievements or awards"
+  );
+}if (sectionAnalysis.skills.score >= 80) {
+  strengths.push(
+    "Well-structured skills section"
+  );
+}
+
+if (sectionAnalysis.projects.score >= 80) {
+  strengths.push(
+    "Strong project section"
+  );
+}
+
+if (sectionAnalysis.education.score >= 80) {
+  strengths.push(
+    "Clear education section"
+  );
+}
 
   if (intelligence.structureScore < 80) {
     weaknesses.push(
@@ -145,29 +198,19 @@ else {
 
 return {
   overallScore,
+  roleMatchScore: roleAnalysis.roleMatchScore,
+  structureScore: intelligence.structureScore,
+  experienceScore: intelligence.experienceScore,
+  projectScore: intelligence.projectScore,
+  metricsScore: intelligence.metricsScore,
+  achievementScore: intelligence.achievementScore,
 
-  roleMatchScore:
-    roleAnalysis.roleMatchScore,
-
-  structureScore:
-    intelligence.structureScore,
-
-  experienceScore:
-    intelligence.experienceScore,
-
-  projectScore:
-    intelligence.projectScore,
-
-  metricsScore:
-    intelligence.metricsScore,
-
-  achievementScore:
-    intelligence.achievementScore,
+  sectionAnalysis,
 
   strengths,
-weaknesses,
-suggestions,
-redFlags,
-recruiterSummary,
+  weaknesses,
+  suggestions,
+  redFlags,
+  recruiterSummary,
 };
 }
