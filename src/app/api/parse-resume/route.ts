@@ -14,12 +14,11 @@ export async function POST(request: Request) {
     const resumeText =
       await extractPdfText(buffer);
 
-    console.log("========== PDF TEXT ==========");
-    console.log(resumeText);
-    console.log("==============================");
-
     return NextResponse.json({
       success: true,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
       resumeText,
     });
   } catch (error) {
