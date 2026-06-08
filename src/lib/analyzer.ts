@@ -1,72 +1,98 @@
-export function analyzeResume(
-  resumeText: string,
-  jobDescription: string
-) {
-  const skillBank = [
-    "javascript",
-    "typescript",
+const roleSkills: Record<string, string[]> = {
+  "frontend developer": [
     "react",
     "next.js",
+    "javascript",
+    "typescript",
+    "html",
+    "css",
+    "tailwind",
+    "git",
+  ],
+
+  "backend developer": [
     "node.js",
     "express",
     "mongodb",
     "postgresql",
     "mysql",
-    "python",
-    "java",
-    "sql",
-    "aws",
     "docker",
-    "git",
-    "github",
     "rest api",
-    "tailwind",
+    "git",
+  ],
+
+  "data scientist": [
+    "python",
+    "sql",
+    "pandas",
+    "numpy",
     "machine learning",
-    "artificial intelligence",
+    "tensorflow",
+    "pytorch",
+    "aws",
+  ],
+
+  "ai engineer": [
+    "python",
+    "machine learning",
     "langchain",
-    "django",
-  ];
+    "llm",
+    "rag",
+    "vector database",
+    "tensorflow",
+    "pytorch",
+  ],
 
-  const resume = resumeText.toLowerCase();
-  const jd = jobDescription.toLowerCase();
+  "software engineer": [
+    "java",
+    "python",
+    "javascript",
+    "sql",
+    "git",
+    "data structures",
+    "algorithms",
+  ],
+};
 
-  const matchedSkills = skillBank.filter(
+export function analyzeResume(
+  resumeText: string,
+  role: string
+) {
+  const skills =
+    roleSkills[role.toLowerCase()] || [];
+
+  const resume =
+    resumeText.toLowerCase();
+
+  const matchedSkills = skills.filter(
     (skill) =>
-      jd.includes(skill) &&
       resume.includes(skill)
   );
 
-  const missingSkills = skillBank.filter(
+  const missingSkills = skills.filter(
     (skill) =>
-      jd.includes(skill) &&
       !resume.includes(skill)
   );
 
   const atsScore = Math.round(
     (matchedSkills.length /
-      Math.max(
-        matchedSkills.length +
-          missingSkills.length,
-        1
-      )) *
+      Math.max(skills.length, 1)) *
       100
-  );
-
-  const suggestions = missingSkills.map(
-    (skill) =>
-      `Consider adding ${skill} experience or projects`
-  );
-
-  const strengths = matchedSkills.map(
-    (skill) =>
-      `Strong match in ${skill}`
   );
 
   return {
     atsScore,
     matchedSkills,
     missingSkills,
-    suggestions,
-    strengths,
+
+    strengths: matchedSkills.map(
+      (skill) =>
+        `Strong match in ${skill}`
+    ),
+
+    suggestions: missingSkills.map(
+      (skill) =>
+        `Consider learning ${skill}`
+    ),
   };
 }
