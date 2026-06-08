@@ -32,6 +32,9 @@ export function analyzeResume(
   );
 
   return {
+    strengths: matchedSkills.map(
+  (skill) => `Strong knowledge of ${skill}`
+),
     atsScore,
     matchedSkills: [...new Set(matchedSkills)],
     missingSkills: [...new Set(missingSkills)],

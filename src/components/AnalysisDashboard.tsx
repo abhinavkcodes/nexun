@@ -45,9 +45,27 @@ const analysis = analyzeResume(
     <h2 className="font-bold">
       ATS Score
     </h2>
+    <div className="w-full bg-gray-700 rounded h-4 mt-4">
+  <div
+    className="bg-green-500 h-4 rounded"
+    style={{
+      width: `${analysis.atsScore}%`,
+    }}
+  />
+</div>
 
     <p className="text-5xl font-bold mt-3">
-      {analysis.atsScore}%
+      <span
+  className={
+    analysis.atsScore >= 80
+      ? "text-green-500"
+      : analysis.atsScore >= 60
+      ? "text-yellow-500"
+      : "text-red-500"
+  }
+>
+  {analysis.atsScore}%
+</span>
     </p>
   </div>
 
@@ -69,6 +87,21 @@ const analysis = analyzeResume(
   <h2 className="font-bold text-xl">
     Suggestions
   </h2>
+  <div className="border p-4 rounded">
+  <h2 className="font-bold text-xl">
+    Resume Strengths
+  </h2>
+
+  <ul className="mt-4 space-y-2">
+    {analysis.strengths.map(
+      (item, index) => (
+        <li key={index}>
+          🚀 {item}
+        </li>
+      )
+    )}
+  </ul>
+</div>
 
   <ul className="mt-4 space-y-2">
     {analysis.suggestions.map(
