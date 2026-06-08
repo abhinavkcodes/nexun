@@ -8,7 +8,9 @@ export default function UploadResume() {
   const router = useRouter();
 
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [jobDescription, setJobDescription] = useState("");
+  const [role, setRole] = useState(
+  "software engineer"
+);
   async function handleAnalyze() {
   if (!resumeFile) return;
 
@@ -34,7 +36,7 @@ export default function UploadResume() {
   fileSize: result.fileSize,
   fileType: result.fileType,
   resumeText: result.resumeText,
-  jobDescription,
+  jobDescription: role,
 });
 
   router.push("/analysis");
@@ -71,21 +73,10 @@ export default function UploadResume() {
         )}
       </div>
 
-      <div>
-        <label className="block mb-2 font-medium">
-          Job Description
-        </label>
-
-        <textarea
-          placeholder="Paste the job description here..."
-          className="border p-3 w-full rounded h-40"
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-        />
-      </div>
+      
 
       <button
-        disabled={!resumeFile || !jobDescription.trim()}
+        disabled={!resumeFile}
         onClick={handleAnalyze}
         className="bg-blue-600 text-white px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
       >
