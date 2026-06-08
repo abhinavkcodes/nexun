@@ -33,6 +33,7 @@ export default function UploadResume() {
   fileName: result.fileName,
   fileSize: result.fileSize,
   fileType: result.fileType,
+  resumeText: result.resumeText,
   jobDescription,
 });
 

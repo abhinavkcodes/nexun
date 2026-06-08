@@ -9,16 +9,16 @@ export default function AnalysisDashboard() {
     <div className="space-y-4">
 
       <div className="border p-4 rounded">
-  <h2 className="font-bold">
-    Resume File
-  </h2>
+        <h2 className="font-bold">
+          Resume File
+        </h2>
 
-  <p>{data?.fileName}</p>
+        <p>{data?.fileName}</p>
 
-  <p>Size: {data?.fileSize} bytes</p>
+        <p>Size: {data?.fileSize} bytes</p>
 
-  <p>Type: {data?.fileType}</p>
-</div>
+        <p>Type: {data?.fileType}</p>
+      </div>
 
       <div className="border p-4 rounded">
         <h2 className="font-bold">
@@ -26,10 +26,20 @@ export default function AnalysisDashboard() {
         </h2>
 
         <p>
-          {data?.jobDescription ?? "No job description"}
+          {data?.jobDescription}
         </p>
+      </div>
+
+      <div className="border p-4 rounded">
+        <h2 className="font-bold">
+          Extracted Resume Text
+        </h2>
+
+        <pre className="whitespace-pre-wrap text-sm mt-2">
+          {data?.resumeText}
+        </pre>
       </div>
 
     </div>
   );
-}   
+}
