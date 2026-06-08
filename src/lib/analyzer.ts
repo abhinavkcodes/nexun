@@ -4,39 +4,37 @@ export function analyzeResume(
 ) {
   const jdWords = jobDescription
     .toLowerCase()
-    .split(/\s+/);
+    .split(/\s+/)
+    .filter((word) => word.length > 2);
 
   const resumeLower =
     resumeText.toLowerCase();
 
   const matchedSkills = jdWords.filter(
     (word) =>
-      word.length > 3 &&
       resumeLower.includes(word)
   );
 
-  const uniqueMatches =
-    [...new Set(matchedSkills)];
-
-  const score = Math.min(
-    100,
-    Math.round(
-      (uniqueMatches.length /
-        Math.max(jdWords.length, 1)) *
-        100
-    )
+  const missingSkills = jdWords.filter(
+    (word) =>
+      !resumeLower.includes(word)
   );
 
-  const missingSkills =
-    jdWords.filter(
-      (word) =>
-        word.length > 3 &&
-        !resumeLower.includes(word)
-    );
+  const atsScore = Math.round(
+    (matchedSkills.length /
+      Math.max(jdWords.length, 1)) *
+      100
+  );
+
+  const suggestions = missingSkills.map(
+    (skill) =>
+      `Add ${skill} experience or projects to your resume`
+  );
 
   return {
-    atsScore: score,
-    matchedSkills: uniqueMatches,
+    atsScore,
+    matchedSkills: [...new Set(matchedSkills)],
     missingSkills: [...new Set(missingSkills)],
+    suggestions,
   };
 }

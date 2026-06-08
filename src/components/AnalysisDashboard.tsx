@@ -1,9 +1,15 @@
 "use client";
 
 import { getResumeData } from "../lib/storage";
+import { analyzeResume } from "../lib/analyzer";
 
 export default function AnalysisDashboard() {
   const data = getResumeData();
+
+const analysis = analyzeResume(
+  data?.resumeText ?? "",
+  data?.jobDescription ?? ""
+);
 
   return (
     <div className="space-y-4">
@@ -33,6 +39,86 @@ export default function AnalysisDashboard() {
       <div className="border p-4 rounded">
         <h2 className="font-bold">
           Extracted Resume Text
+          <div className="grid md:grid-cols-3 gap-4">
+
+  <div className="border p-6 rounded">
+    <h2 className="font-bold">
+      ATS Score
+    </h2>
+
+    <p className="text-5xl font-bold mt-3">
+      {analysis.atsScore}%
+    </p>
+  </div>
+
+  <div className="border p-6 rounded">
+    <h2 className="font-bold">
+      Matched Skills
+    </h2>
+
+    <p className="text-5xl font-bold mt-3">
+      {analysis.matchedSkills.length}
+    </p>
+  </div>
+
+  <div className="border p-6 rounded">
+    <h2 className="font-bold">
+      Missing Skills
+    </h2>
+    <div className="border p-4 rounded">
+  <h2 className="font-bold text-xl">
+    Suggestions
+  </h2>
+
+  <ul className="mt-4 space-y-2">
+    {analysis.suggestions.map(
+      (item, index) => (
+        <li key={index}>
+          💡 {item}
+        </li>
+      )
+    )}
+  </ul>
+</div>
+
+    <p className="text-5xl font-bold mt-3">
+      {analysis.missingSkills.length}
+    </p>
+  </div>
+
+</div>
+
+<div className="border p-4 rounded">
+  <h2 className="font-bold text-xl">
+    Matched Skills
+  </h2>
+
+  <ul className="mt-2">
+    {analysis.matchedSkills.map(
+      (skill, index) => (
+        <li key={index}>
+          ✅ {skill}
+        </li>
+      )
+    )}
+  </ul>
+</div>
+
+<div className="border p-4 rounded">
+  <h2 className="font-bold text-xl">
+    Missing Skills
+  </h2>
+
+  <ul className="mt-2">
+    {analysis.missingSkills.map(
+      (skill, index) => (
+        <li key={index}>
+          ❌ {skill}
+        </li>
+      )
+    )}
+  </ul>
+</div>
         </h2>
 
         <pre className="whitespace-pre-wrap text-sm mt-2">
