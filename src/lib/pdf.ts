@@ -1,20 +1,9 @@
+import pdf from "pdf-parse";
+
 export async function extractPdfText(
   buffer: Buffer
 ) {
-  return `
-Abhinav Kumar
+  const data = await pdf(buffer);
 
-Skills:
-Node.js
-React
-TypeScript
-MongoDB
-
-Projects:
-Nexun
-Smart Analyzer CLI
-
-Experience:
-Student Developer
-`;
+  return data.text;
 }
