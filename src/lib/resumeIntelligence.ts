@@ -44,11 +44,25 @@ if (hasAchievements) structureScore += 15;
       /intern|internship/gi
     ) || []
   ).length;
+const experienceSignals = [
+  "agile",
+  "team",
+  "sprint",
+  "collaborated",
+  "analysis",
+  "dashboard",
+];
 
+const experienceMatches =
+  experienceSignals.filter(
+    (signal) =>
+      text.includes(signal)
+  ).length;
 const experienceScore =
   Math.min(
     100,
-    internshipCount * 40
+    internshipCount * 30 +
+    experienceMatches * 8
   );
 
   const projectKeywords = [
@@ -60,18 +74,34 @@ const experienceScore =
     "designed",
     "architected",
   ];
+  const projectSignals = [
+  "github",
+  "vercel",
+  "deployed",
+  "api",
+  "full-stack",
+  "authentication",
+  "dashboard",
+];
 
   const projectMatches =
     projectKeywords.filter(
       (word) =>
         text.includes(word)
     ).length;
+const signalMatches =
+  projectSignals.filter(
+    (signal) =>
+      text.includes(signal)
+  ).length;
 
   const projectScore =
-    Math.min(
-      100,
-      projectMatches * 15
-    );
+  Math.min(
+    100,
+    projectMatches * 10 +
+    signalMatches * 5
+  );
+  
 
   const metrics =
     resumeText.match(

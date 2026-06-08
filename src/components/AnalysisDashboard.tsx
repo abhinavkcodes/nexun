@@ -6,6 +6,8 @@ import { analyzeResume } from "../lib/analyzer";
 import { analyzeResumeIntelligence } from "../lib/resumeIntelligence";
 import { analyzeATS }
 from "../lib/atsEngine";
+import { detectRole }
+from "../lib/roleDetector";
 
 export default function AnalysisDashboard() {
   const [data, setData] = useState<any>(null);
@@ -17,10 +19,13 @@ export default function AnalysisDashboard() {
   if (!data) {
     return <p>Loading...</p>;
   }
-
+const detectedRole =
+  detectRole(
+    data.resumeText ?? ""
+  );
   const analysis = analyzeResume(
   data.resumeText ?? "",
-  data.jobDescription ?? ""
+  detectedRole.role
 );
 const intelligence =
   analyzeResumeIntelligence(
@@ -56,12 +61,36 @@ const atsLabel =
       </div>
 
       <div className="border p-4 rounded">
-        <h2 className="font-bold text-xl">
-  Target Role
-</h2>
+  <h2 className="font-bold text-xl">
+    Detected Role
+  </h2>
 
-<p>{data.jobDescription}</p>
-      </div>
+  <p className="mt-2 text-lg font-semibold">
+    {detectedRole.role}
+  </p>
+
+  <p className="text-sm text-gray-500">
+    Confidence: {detectedRole.confidence}%
+  </p>
+</div>
+<div className="border p-4 rounded">
+  <h2 className="font-bold text-xl">
+    Role Detection Signals
+  </h2>
+
+  <ul className="mt-2">
+    {detectedRole.matchedKeywords.map(
+      (
+        keyword: string,
+        index: number
+      ) => (
+        <li key={index}>
+          ✅ {keyword}
+        </li>
+      )
+    )}
+  </ul>
+</div>
 
       <div className="grid md:grid-cols-3 gap-4">
 
@@ -115,7 +144,7 @@ const atsLabel =
         </h2>
 
         <ul className="mt-4 space-y-2">
-          {analysis.strengths.map(
+          {ats.strengths.map(
             (item, index) => (
               <li key={index}>
                 🚀 {item}
