@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getResumeData } from "../lib/storage";
 import { analyzeResume } from "../lib/analyzer";
+import { analyzeResumeIntelligence } from "../lib/resumeIntelligence";
 
 export default function AnalysisDashboard() {
   const [data, setData] = useState<any>(null);
@@ -19,13 +20,26 @@ export default function AnalysisDashboard() {
   data.resumeText ?? "",
   data.jobDescription ?? ""
 );
+const intelligence =
+  analyzeResumeIntelligence(
+    data.resumeText ?? ""
+  );
+ 
+
+const finalATSScore = Math.min(
+  95,
+  Math.round(
+    (analysis.roleMatchScore ?? 0) * 0.8 +
+    (intelligence.resumeQualityScore ?? 0) * 0.2
+  )
+);
 
 const atsLabel =
-  analysis.atsScore >= 85
+  analysis.roleMatchScore >= 85
     ? "Excellent Match"
-    : analysis.atsScore >= 70
+    : analysis.roleMatchScore >= 70
     ? "Good Match"
-    : analysis.atsScore >= 50
+    : analysis.roleMatchScore >= 50
     ? "Average Match"
     : "Needs Improvement";
 
@@ -61,13 +75,13 @@ const atsLabel =
     <div
       className="bg-green-500 h-4 rounded"
       style={{
-        width: `${analysis.atsScore}%`,
+        width: `${finalATSScore}%`,
       }}
     />
   </div>
 
   <p className="text-5xl font-bold mt-3">
-    {analysis.atsScore}%
+    {finalATSScore}%
   </p>
   <p className="mt-2 text-lg">
   {atsLabel}
