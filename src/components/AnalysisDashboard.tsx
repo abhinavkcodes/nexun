@@ -36,6 +36,7 @@ const intelligence =
   analysis,
   intelligence
 );
+console.log(data.resumeText);
 console.log("ATS OBJECT");
 console.log(ats);
 console.log("SECTION ANALYSIS");

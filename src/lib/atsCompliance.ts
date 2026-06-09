@@ -44,11 +44,14 @@ export interface ATSComplianceResult {
     );
 
   const linkedin =
-    text.includes("linkedin.com");
+  /(linkedin|linkedin\.com)/i.test(
+    resumeText
+  );
 
-  const github =
-    text.includes("github.com");
-
+const github =
+  /(github|github\.com)/i.test(
+    resumeText
+  );
   const skillsSection =
     sections.skills.found;
 

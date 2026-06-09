@@ -4,6 +4,7 @@ export interface ExperienceAnalysis {
   actionVerbScore: number;
   metricsScore: number;
   leadershipScore: number;
+  experienceSignalScore: number;
 
   strengths: string[];
   weaknesses: string[];
@@ -21,13 +22,24 @@ const ACTION_VERBS = [
   "engineered",
   "architected",
   "integrated",
-  "led",
-  "managed",
+
+  "analyzed",
   "delivered",
+  "collaborated",
   "reduced",
   "increased",
+  "generated",
+  "executed",
+  "supported",
+  "maintained",
+  "tracked",
+  "monitored",
+  "reported",
+
+  "led",
+  "managed",
+  "owned",
   "scaled",
-  "collaborated",
   "mentored"
 ];
 const LEADERSHIP_KEYWORDS = [
@@ -39,6 +51,24 @@ const LEADERSHIP_KEYWORDS = [
   "directed",
   "headed",
   "supervised"
+];
+const EXPERIENCE_SIGNALS = [
+  "intern",
+  "internship",
+  "agile",
+  "sprint",
+  "dashboard",
+  "sql",
+  "python",
+  "pandas",
+  "analytics",
+  "analysis",
+  "report",
+  "automation",
+  "stakeholder",
+  "business",
+  "data accuracy",
+  "data quality",
 ];
 export function analyzeExperience(
   experienceText: string
@@ -66,21 +96,32 @@ export function analyzeExperience(
     );
 
   const metricMatches =
-    text.match(
-      /\d+%|\d+\+|\d+\s(users|customers|clients|projects)/gi
-    ) || [];
+  text.match(
+    /\d+%|\d+\+|\d+,?\d*|\d+\s(users|customers|clients|projects|rows|reports|dashboards)/gi
+  ) || [];
 
   metricsScore =
     Math.min(
       metricMatches.length * 10,
       30
     );
+const leadershipMatches =
+  LEADERSHIP_KEYWORDS.filter(
+    keyword =>
+      text.includes(keyword)
+  );
 
-  const leadershipMatches =
-    LEADERSHIP_KEYWORDS.filter(
-      keyword =>
-        text.includes(keyword)
-    );
+const experienceSignals =
+  EXPERIENCE_SIGNALS.filter(
+    signal =>
+      text.includes(signal)
+  );
+
+const experienceSignalScore =
+  Math.min(
+    experienceSignals.length * 3,
+    20
+  );
 
   leadershipScore =
     Math.min(
@@ -113,20 +154,29 @@ export function analyzeExperience(
       "Demonstrates leadership and ownership"
     );
   }
+  if (
+  experienceSignals.length >= 5
+) {
+  strengths.push(
+    "Strong internship and industry experience signals"
+  );
+}
 
   const score =
-    actionVerbScore +
-    metricsScore +
-    leadershipScore;
+  actionVerbScore +
+  metricsScore +
+  leadershipScore +
+  experienceSignalScore;
 
   return {
-    score: Math.min(score, 100),
+  score: Math.min(score, 100),
 
-    actionVerbScore,
-    metricsScore,
-    leadershipScore,
+  actionVerbScore,
+  metricsScore,
+  leadershipScore,
+  experienceSignalScore,
 
-    strengths,
-    weaknesses
-  };
+  strengths,
+  weaknesses
+};
 }

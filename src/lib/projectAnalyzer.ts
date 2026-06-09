@@ -73,6 +73,16 @@ const ARCHITECTURE_SIGNALS = [
   "microservice",
   "distributed"
 ];
+const IMPACT_SIGNALS = [
+  "users",
+  "students",
+  "medicines",
+  "records",
+  "load time",
+  "response time",
+  "latency",
+  "performance",
+];
 export function analyzeProject(
     
   projectText: string
@@ -117,17 +127,17 @@ const ownershipMatches =
     /\b(built|created|developed|designed|architected|implemented)\b/gi
   ) || [];
   const technicalDepthScore =
-    Math.min(
-      technicalMatches.length * 4 +
-      aiMatches.length * 5,
-      40
-    );
+  Math.min(
+    technicalMatches.length * 5 +
+    aiMatches.length * 6,
+    50
+  );
 
   const deploymentScore =
-    Math.min(
-      deploymentMatches.length * 5,
-      20
-    );
+  Math.min(
+    deploymentMatches.length * 6,
+    20
+  );
 
   const architectureScore =
     Math.min(
@@ -136,15 +146,31 @@ const ownershipMatches =
     );
 
   const impactScore =
-    Math.min(
-      metricMatches.length * 10,
-      20
-    );
-    const ownershipScore =
+  Math.min(
+    metricMatches.length * 5,
+    15
+  );
+
+const ownershipScore =
   Math.min(
     ownershipMatches.length * 5,
     20
   );
+
+const scaleFactor = 1.25;
+
+const score = Math.min(
+  Math.round(
+    (
+      technicalDepthScore +
+      deploymentScore +
+      architectureScore +
+      impactScore +
+      ownershipScore
+    ) * scaleFactor
+  ),
+  100
+);
 
   if (
     technicalMatches.length >= 5
@@ -186,15 +212,10 @@ const ownershipMatches =
     );
   }
 
-  const score =
-  technicalDepthScore +
-  deploymentScore +
-  architectureScore +
-  impactScore +
-  ownershipScore;
+  
 
   return {
-    score: Math.min(score, 100),
+  score,
 
     technicalDepthScore,
     deploymentScore,

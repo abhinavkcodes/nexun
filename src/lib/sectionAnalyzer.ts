@@ -58,16 +58,33 @@ function extractSection(
   keywords: string[]
 ): string {
 
-  const lowerText = text.toLowerCase();
+  const lines =
+    text.split("\n");
+
+  const headings =
+    Object.values(
+      SECTION_PATTERNS
+    ).flat();
 
   let startIndex = -1;
 
-  for (const keyword of keywords) {
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
 
-    const index = lowerText.indexOf(keyword);
+    const current =
+      lines[i]
+        .trim()
+        .toLowerCase()
+        .replace(/[:\-]/g, "");
 
-    if (index !== -1) {
-      startIndex = index;
+    const isSectionHeading =
+      keywords.includes(current);
+
+    if (isSectionHeading) {
+      startIndex = i;
       break;
     }
   }
@@ -76,36 +93,37 @@ function extractSection(
     return "";
   }
 
-  const remainingText = text.slice(startIndex);
+  let endIndex =
+    lines.length;
 
-  const lines = remainingText.split("\n");
+  for (
+    let i = startIndex + 1;
+    i < lines.length;
+    i++
+  ) {
 
-  const contentLines: string[] = [];
+    const current =
+      lines[i]
+        .trim()
+        .toLowerCase()
+        .replace(/[:\-]/g, "");
 
-  let started = false;
+    const isAnotherHeading =
+      headings.includes(current);
 
-  for (const line of lines) {
-
-    const trimmed = line.trim();
-
-    if (!started) {
-      started = true;
-      continue;
+    if (isAnotherHeading) {
+      endIndex = i;
+      break;
     }
-
-    const isLikelyHeading =
-  trimmed.length > 0 &&
-  trimmed.length < 40 &&
-  /^[A-Za-z\s&]+$/.test(trimmed);
-
-if (started && isLikelyHeading) {
-  break;
-}
-
-    contentLines.push(line);
   }
 
-  return contentLines.join("\n");
+  return lines
+    .slice(
+      startIndex + 1,
+      endIndex
+    )
+    .join("\n")
+    .trim();
 }
 function scoreSection(
   content: string,
@@ -197,7 +215,19 @@ export function analyzeSections(
     resumeText,
     SECTION_PATTERNS.projects
   );
+  console.log(
+  "PROJECTS LENGTH:",
+  projectsContent.length
+);
 
+console.log(
+  "PROJECTS CONTENT FULL:"
+);
+console.log(
+  resumeText.includes("Nexun")
+);
+
+console.log(projectsContent);
   const educationContent = extractSection(
     resumeText,
     SECTION_PATTERNS.education

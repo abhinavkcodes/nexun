@@ -27,7 +27,14 @@ const experienceAnalysis =
   analyzeProject(
     sections.projects.content
   );
-
+console.log(
+  "PROJECT SECTION:",
+  sections.projects.content
+);
+console.log(
+  "RAW PROJECT CONTENT:",
+  sections.projects.content
+);
 const projectScore =
   projectAnalysis.score;
   const hasSkills =
