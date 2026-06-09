@@ -1,8 +1,23 @@
+import {
+  analyzeExperience
+} from "./experienceAnalyzer";
+
+import {
+  analyzeSections
+} from "./sectionAnalyzer";
 export function analyzeResumeIntelligence(
   resumeText: string
 ) {
   const text = resumeText.toLowerCase();
+const sections =
+  analyzeSections(
+    resumeText
+  );
 
+const experienceAnalysis =
+  analyzeExperience(
+    sections.experience.content
+  );
   const hasSkills =
     text.includes("skills");
 
@@ -38,32 +53,7 @@ if (hasAchievements) structureScore += 15;
     100
   );
 
-  const internshipCount =
-  (
-    text.match(
-      /intern|internship/gi
-    ) || []
-  ).length;
-const experienceSignals = [
-  "agile",
-  "team",
-  "sprint",
-  "collaborated",
-  "analysis",
-  "dashboard",
-];
-
-const experienceMatches =
-  experienceSignals.filter(
-    (signal) =>
-      text.includes(signal)
-  ).length;
-const experienceScore =
-  Math.min(
-    100,
-    internshipCount * 30 +
-    experienceMatches * 8
-  );
+  
 
   const projectKeywords = [
     "built",
