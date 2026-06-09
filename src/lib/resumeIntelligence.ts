@@ -5,6 +5,9 @@ import {
 import {
   analyzeSections
 } from "./sectionAnalyzer";
+import {
+  analyzeProject
+} from "./projectAnalyzer";
 export function analyzeResumeIntelligence(
   resumeText: string
 ) {
@@ -18,6 +21,15 @@ const experienceAnalysis =
   analyzeExperience(
     sections.experience.content
   );
+  const experienceScore =
+  experienceAnalysis.score;
+  const projectAnalysis =
+  analyzeProject(
+    sections.projects.content
+  );
+
+const projectScore =
+  projectAnalysis.score;
   const hasSkills =
     text.includes("skills");
 
@@ -53,44 +65,6 @@ if (hasAchievements) structureScore += 15;
     100
   );
 
-  
-
-  const projectKeywords = [
-    "built",
-    "developed",
-    "created",
-    "engineered",
-    "implemented",
-    "designed",
-    "architected",
-  ];
-  const projectSignals = [
-  "github",
-  "vercel",
-  "deployed",
-  "api",
-  "full-stack",
-  "authentication",
-  "dashboard",
-];
-
-  const projectMatches =
-    projectKeywords.filter(
-      (word) =>
-        text.includes(word)
-    ).length;
-const signalMatches =
-  projectSignals.filter(
-    (signal) =>
-      text.includes(signal)
-  ).length;
-
-  const projectScore =
-  Math.min(
-    100,
-    projectMatches * 10 +
-    signalMatches * 5
-  );
   
 
   const metrics =
@@ -144,5 +118,15 @@ const signalMatches =
     resumeQualityScore,
     metricsFound:
       metrics.length,
+      experienceStrengths:
+  experienceAnalysis.strengths,
+
+experienceWeaknesses:
+  experienceAnalysis.weaknesses,
+  projectStrengths:
+  projectAnalysis.strengths,
+
+projectWeaknesses:
+  projectAnalysis.weaknesses,
   };
 }
