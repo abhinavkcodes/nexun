@@ -48,8 +48,7 @@
     ...ats.suggestions
   ].slice(0, 3);
 
-  const recruiterSummary =
-    `This resume aligns well with the ${detectedRole.role} role. The strongest areas are technical skills and project experience. The biggest opportunities are improving measurable impact, keyword coverage, and achievement-focused descriptions.`;
+  
   console.log(
     "HAS NEXUN:",
     data.resumeText.includes("Nexun")
@@ -284,14 +283,14 @@ text-slate-700
 
     </div>
 
-    <p className="
-    mt-8
-    text-gray-600
-    leading-8
-    max-w-3xl
-    ">
-      {recruiterSummary}
-    </p>
+  <p className="
+mt-8
+text-gray-600
+leading-8
+max-w-3xl
+">
+  {ats.recruiterSummary}
+</p>
 
   </div>
 
@@ -387,18 +386,16 @@ ATS Score
 </div>
 
   <div className="bg-white rounded-3xl border p-6">
-    <p className="text-sm text-gray-500">
-      Potential Score
-    </p>
 
-    <h2 className="text-5xl font-bold mt-3">
-      {Math.min(
-        ats.overallScore + 15,
-        100
-      )}
-    </h2>
-  </div>
+  <p className="text-sm text-gray-500">
+    Resume Quality
+  </p>
 
+  <h2 className="text-5xl font-bold mt-3">
+    {intelligence.resumeQualityScore}
+  </h2>
+
+</div>
   <div className="bg-white rounded-3xl border p-6">
     <p className="text-sm text-gray-500">
       Interview Readiness
@@ -408,6 +405,39 @@ ATS Score
       {interviewReadiness}
     </h2>
   </div>
+
+</div>
+<div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="text-2xl font-bold mb-6">
+ATS Compliance
+</h2>
+
+<div className="grid md:grid-cols-4 gap-4">
+
+<div className="p-4 rounded-2xl bg-slate-50">
+Email {ats.atsCompliance.checks.email ? "✅" : "❌"}
+</div>
+
+<div className="p-4 rounded-2xl bg-slate-50">
+Phone {ats.atsCompliance.checks.phone ? "✅" : "❌"}
+</div>
+
+<div className="p-4 rounded-2xl bg-slate-50">
+LinkedIn {ats.atsCompliance.checks.linkedin ? "✅" : "❌"}
+</div>
+
+<div className="p-4 rounded-2xl bg-slate-50">
+GitHub {ats.atsCompliance.checks.github ? "✅" : "❌"}
+</div>
+
+</div>
 
 </div>
  <div className="
@@ -423,7 +453,7 @@ text-2xl
 font-bold
 mb-6
 ">
-ATS Heatmap
+Section Analysis
 </h2>
 <div className="
 bg-white
@@ -465,7 +495,11 @@ bg-green-50
 ">
 <p>Strongest Area</p>
 <p className="text-xl font-bold mt-2">
-Projects
+{
+ats.projectScore >= ats.experienceScore
+? "Projects"
+: "Experience"
+}
 </p>
 </div>
 
@@ -476,7 +510,11 @@ bg-yellow-50
 ">
 <p>Needs Work</p>
 <p className="text-xl font-bold mt-2">
-Keywords
+{
+ats.metricsScore < 60
+? "Impact Metrics"
+: "Skills Coverage"
+}
 </p>
 </div>
 
@@ -549,20 +587,6 @@ text-2xl
 font-bold
 mb-6
 ">
-Interview Questions Predictor
-<div className="
-bg-white
-rounded-3xl
-border
-border-slate-200
-p-8
-">
-
-<h2 className="
-text-2xl
-font-bold
-mb-6
-">
 Resume Strengths
 </h2>
 
@@ -587,7 +611,73 @@ border-green-100
 
 </div>
 
-</div>  
+</div>
+
+<div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="
+text-2xl
+font-bold
+mb-6
+">
+Recruiter Concerns
+</h2>
+
+<div className="space-y-4">
+
+{ats.redFlags.length === 0 ? (
+<div
+className="
+p-4
+rounded-2xl
+bg-green-50
+border
+border-green-100
+"
+>
+✅ No major recruiter concerns detected.
+</div>
+) : (
+ats.redFlags.map((flag,index)=>(
+<div
+key={index}
+className="
+p-4
+rounded-2xl
+bg-red-50
+border
+border-red-100
+"
+>
+🚨 {flag}
+</div>
+))
+)}
+
+</div>
+
+</div>
+<div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="
+text-2xl
+font-bold
+mb-6
+">
+Interview Questions Predictor
+
 </h2>
 
 <div className="space-y-3">
@@ -632,10 +722,35 @@ border-slate-100
   border-slate-200
   p-6
   ">
-          <h2 className="font-bold text-xl">
-            Missing Skills
-          </h2>
+         <h2 className="font-bold text-xl">
+  Missing Skills
+</h2>
 
+<p className="text-sm text-gray-500 mt-1">
+Role Match Score: {analysis.roleMatchScore}%
+</p>
+<div className="flex flex-wrap gap-2 mt-4">
+
+{detectedRole.matchedKeywords.map(
+(keyword,index)=>(
+<div
+key={index}
+className="
+px-3
+py-1
+rounded-full
+bg-green-50
+text-green-700
+text-sm
+font-medium
+"
+>
+{keyword}
+</div>
+)
+)}
+
+</div>
           <div className="
 flex
 flex-wrap
@@ -664,19 +779,12 @@ font-medium
 </div>
         </div>
 
-        <div className="
-  bg-white
-  rounded-2xl
-  shadow-lg
-  border
-  border-slate-200
-  p-6
-  ">
+        
           
 
         </div>
 
       </div>
-      </div>
+      
     );
   }
