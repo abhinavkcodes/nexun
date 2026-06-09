@@ -1,476 +1,682 @@
-"use client";
-import {
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer
-} from "recharts";
-import { useEffect, useState } from "react";
-import { getResumeData } from "../lib/storage";
-import { analyzeResume } from "../lib/analyzer";
-import { analyzeResumeIntelligence } from "../lib/resumeIntelligence";
-import { analyzeATS }
-from "../lib/atsEngine";
-import { detectRole }
-from "../lib/roleDetector";
+  "use client";
+  import { useEffect, useState } from "react";
+  import { getResumeData } from "../lib/storage";
+  import { analyzeResume } from "../lib/analyzer";
+  import { analyzeResumeIntelligence } from "../lib/resumeIntelligence";
+  import { analyzeATS }
+  from "../lib/atsEngine";
+  import { detectRole }
+  from "../lib/roleDetector";
 
-export default function AnalysisDashboard() {
-  const [data, setData] = useState<any>(null);
+  export default function AnalysisDashboard() {
+    const [data, setData] = useState<any>(null);
 
-  useEffect(() => {
-    setData(getResumeData());
-  }, []);
+    useEffect(() => {
+      setData(getResumeData());
+    }, []);
 
-  if (!data) {
-    return <p>Loading...</p>;
-  }
-const detectedRole =
-  detectRole(
-    data.resumeText ?? ""
+    if (!data) {
+      return <p>Loading...</p>;
+    }
+  const detectedRole =
+    detectRole(
+      data.resumeText ?? ""
+    );
+    const analysis = analyzeResume(
+    data.resumeText ?? "",
+    detectedRole.role
   );
-  const analysis = analyzeResume(
-  data.resumeText ?? "",
-  detectedRole.role
-);
-const intelligence =
-  analyzeResumeIntelligence(
-    data.resumeText ?? ""
+  const intelligence =
+    analyzeResumeIntelligence(
+      data.resumeText ?? ""
+    );
+    const ats = analyzeATS(
+    data.resumeText,
+    analysis,
+    intelligence
   );
-  const ats = analyzeATS(
-  data.resumeText,
-  analysis,
-  intelligence
-);
-console.log(
-  "HAS NEXUN:",
-  data.resumeText.includes("Nexun")
-);
+  const interviewReadiness =
+    Math.round(
+      (
+        ats.overallScore +
+        ats.roleMatchScore
+      ) / 2
+    );
 
-console.log(
-  "HAS MEDITRACK:",
-  data.resumeText.includes("MediTrack")
-);
-console.log(data.resumeText);
-console.log("ATS OBJECT");
-console.log(ats);
-console.log("SECTION ANALYSIS");
-console.log(ats.sectionAnalysis);
- 
+  const majorImprovements = [
+    ...ats.weaknesses,
+    ...ats.suggestions
+  ].slice(0, 3);
 
-const atsLabel =
-  ats.overallScore >= 85
-    ? "Excellent Match"
-    : ats.overallScore >= 70
-    ? "Good Match"
-    : ats.overallScore >= 50
-    ? "Average Match"
-    : "Needs Improvement";
-const radarData = [
-  {
-    subject: "Skills",
-    score:
-      ats.sectionAnalysis.skills.score
-  },
-  {
-    subject: "Experience",
-    score:
-      ats.sectionAnalysis.experience.score
-  },
-  {
-    subject: "Projects",
-    score:
-      ats.sectionAnalysis.projects.score
-  },
-  {
-    subject: "Achievements",
-    score:
-      ats.sectionAnalysis.achievements.score
-  },
-  {
-    subject: "ATS",
-    score:
-      ats.overallScore
-  },
-  {
-    subject: "Role Match",
-    score:
-      ats.roleMatchScore
-  }
-];
-  return (
-    <div className="space-y-6">
+  const recruiterSummary =
+    `This resume aligns well with the ${detectedRole.role} role. The strongest areas are technical skills and project experience. The biggest opportunities are improving measurable impact, keyword coverage, and achievement-focused descriptions.`;
+  console.log(
+    "HAS NEXUN:",
+    data.resumeText.includes("Nexun")
+  );
+
+  console.log(
+    "HAS MEDITRACK:",
+    data.resumeText.includes("MediTrack")
+  );
+  console.log(data.resumeText);
+  console.log("ATS OBJECT");
+  console.log(ats);
+  console.log("SECTION ANALYSIS");
+  console.log(ats.sectionAnalysis);
+  
+
+  const atsLabel =
+    ats.overallScore >= 85
+      ? "Excellent Match"
+      : ats.overallScore >= 70
+      ? "Good Match"
+      : ats.overallScore >= 50
+      ? "Average Match"
+      : "Needs Improvement";
+
+    return (
+
+    <div className="flex gap-6 max-w-[1600px] mx-auto p-6">
+      {/* LEFT PANEL */}
+
+  <div className="w-[38%] sticky top-6 h-[calc(100vh-48px)]">
+
+    <div className="
+    bg-white
+    rounded-3xl
+    border
+    border-slate-200
+    h-full
+    overflow-hidden
+    ">
+
+    <div className="
+rounded-3xl
+overflow-hidden
+bg-gradient-to-r
+from-indigo-700
+to-purple-700
+p-10
+text-white
+">
+
+<p className="
+uppercase
+tracking-widest
+text-indigo-200
+text-sm
+">
+NEXUN ATS BUILDER
+</p>
+
+<h2 className="
+text-4xl
+font-bold
+mt-3
+">
+Build ATS-Friendly Resume
+</h2>
+
+<p className="
+mt-4
+max-w-xl
+text-indigo-100
+">
+Automatically rewrite weak sections,
+add missing keywords,
+improve ATS score,
+and generate a recruiter-ready resume.
+</p>
+
+<div className="
+mt-8
+flex
+items-center
+gap-4
+">
+
+<div className="
+text-5xl
+font-bold
+">
+{ats.overallScore}
+</div>
+
+<div className="text-2xl">
+→
+</div>
+
+<div className="
+text-5xl
+font-bold
+">
+{Math.min(
+ats.overallScore + 15,
+100
+)}
+</div>
+
+</div>
+
+<button
+className="
+mt-8
+bg-white
+text-black
+font-semibold
+px-6
+py-3
+rounded-xl
+"
+>
+Build Resume →
+</button>
+
+</div>
 
       <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-        <h2 className="font-bold text-xl">
-          Resume File
-        </h2>
+      p-5
+      overflow-y-auto
+      h-full
+      ">
 
-        <p>{data.fileName}</p>
-        <p>Size: {data.fileSize} bytes</p>
-        <p>Type: {data.fileType}</p>
+        <pre className="
+whitespace-pre-wrap
+text-[13px]
+leading-7
+font-light
+text-slate-700
+">
+          {data.resumeText}
+        </pre>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {/* RIGHT PANEL */}
+
+  <div className="flex-1 space-y-6">
+  <div className="
+  bg-white
+  rounded-3xl
+  border
+  border-slate-200
+  p-10
+  shadow-sm
+  ">
+
+    <div className="
+    flex
+    items-center
+    justify-between
+    flex-wrap
+    gap-4
+    ">
+
+      <div>
+
+        <p className="
+        text-xs
+        uppercase
+        tracking-widest
+        text-gray-500
+        ">
+          Recruiter Verdict
+        </p>
+
+        <div className="flex items-center gap-8 mt-4">
+
+  <div className="
+  h-32
+  w-32
+  rounded-full
+  border-[10px]
+  border-green-500
+  flex
+  items-center
+  justify-center
+  ">
+
+    <span className="text-4xl font-bold">
+      {interviewReadiness}
+    </span>
+
+  </div>
+
+  <div>
+
+    <h2 className="text-5xl font-bold">
+      Strong Candidate
+    </h2>
+
+    <p className="text-gray-500 mt-2">
+      Likely to pass recruiter screening.
+    </p>
+
+  </div>
+
+</div>
+
+        <p className="
+        text-xl
+        font-medium
+        mt-3
+        ">
+          Strong Candidate
+        </p>
+
       </div>
 
       <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-  <h2 className="font-bold text-xl">
-    Detected Role
-  </h2>
+      px-5
+      py-3
+      rounded-2xl
+      bg-green-50
+      text-green-700
+      font-semibold
+      ">
+        {detectedRole.role}
+      </div>
 
-  <p className="mt-2 text-lg font-semibold">
-    {detectedRole.role}
-  </p>
+    </div>
 
-  <p className="text-sm text-gray-500">
-    Confidence: {detectedRole.confidence}%
-  </p>
-</div>
-<div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-  <h2 className="font-bold text-xl">
-    Role Detection Signals
-  </h2>
+    <p className="
+    mt-8
+    text-gray-600
+    leading-8
+    max-w-3xl
+    ">
+      {recruiterSummary}
+    </p>
 
-  <ul className="mt-2">
-    {detectedRole.matchedKeywords.map(
-      (
-        keyword: string,
-        index: number
-      ) => (
-        <li key={index}>
-          ✅ {keyword}
-        </li>
-      )
-    )}
-  </ul>
-</div>
-
-      <div className="grid md:grid-cols-3 gap-4">
-
-        <div className="border p-6 rounded">
-  <h2 className="font-bold">
-    ATS Score
-  </h2>
-
-  <div className="w-full bg-gray-700 rounded h-4 mt-4">
-    <div
-      className="bg-green-500 h-4 rounded"
-      style={{
-  width: `${ats.overallScore}%`,
-}}
-    />
   </div>
 
-  <p className="text-5xl font-bold mt-3">
-    {ats.overallScore}%
+        <div className="
+  bg-white
+  rounded-3xl
+  border
+  border-slate-200
+  p-8
+  shadow-sm
+  ">
+
+  <h2 className="
+  text-2xl
+  font-bold
+  ">
+  Major Improvements
+  </h2>
+
+  <p className="
+  text-gray-500
+  mt-2
+  ">
+  These changes will improve your resume the fastest.
   </p>
-  <p className="mt-2 text-lg">
-  {atsLabel}
+
+  <div className="
+  grid
+  md:grid-cols-3
+  gap-4
+  mt-6
+  ">
+
+  {majorImprovements.map((item,index)=>(
+  <div
+  key={index}
+  className="
+  p-5
+  rounded-2xl
+  bg-orange-50
+  border
+  border-orange-100
+  "
+  >
+
+  <div className="
+  text-sm
+  font-bold
+  text-orange-600
+  ">
+  Priority #{index+1}
+  </div>
+
+  <p className="
+  mt-3
+  text-gray-700
+  ">
+  {item}
+  </p>
+
+  </div>
+  ))}
+
+  </div>
+
+  </div>
+
+        
+
+       <div className="grid md:grid-cols-3 gap-4">
+
+  <div className="
+bg-gradient-to-br
+from-indigo-600
+to-indigo-800
+text-white
+rounded-3xl
+p-8
+">
+
+<p className="text-indigo-200 text-sm">
+ATS Score
+</p>
+
+<h2 className="text-6xl font-bold mt-3">
+{ats.overallScore}
+</h2>
+
+<p className="mt-4 text-indigo-100">
+{atsLabel}
+</p>
+
+</div>
+
+  <div className="bg-white rounded-3xl border p-6">
+    <p className="text-sm text-gray-500">
+      Potential Score
+    </p>
+
+    <h2 className="text-5xl font-bold mt-3">
+      {Math.min(
+        ats.overallScore + 15,
+        100
+      )}
+    </h2>
+  </div>
+
+  <div className="bg-white rounded-3xl border p-6">
+    <p className="text-sm text-gray-500">
+      Interview Readiness
+    </p>
+
+    <h2 className="text-5xl font-bold mt-3">
+      {interviewReadiness}
+    </h2>
+  </div>
+
+</div>
+ <div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="
+text-2xl
+font-bold
+mb-6
+">
+ATS Heatmap
+</h2>
+<div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="
+text-2xl
+font-bold
+mb-6
+">
+Career Insights
+</h2>
+
+<div className="
+grid
+grid-cols-3
+gap-4
+">
+
+<div className="
+p-5
+rounded-2xl
+bg-indigo-50
+">
+<p>Detected Role</p>
+<p className="text-xl font-bold mt-2">
+{detectedRole.role}
 </p>
 </div>
 
-        <div className="border p-6 rounded">
-          <h2 className="font-bold">
-            Matched Skills
-          </h2>
+<div className="
+p-5
+rounded-2xl
+bg-green-50
+">
+<p>Strongest Area</p>
+<p className="text-xl font-bold mt-2">
+Projects
+</p>
+</div>
 
-          <p className="text-5xl font-bold mt-3">
-            {analysis.matchedSkills.length}
-          </p>
-        </div>
+<div className="
+p-5
+rounded-2xl
+bg-yellow-50
+">
+<p>Needs Work</p>
+<p className="text-xl font-bold mt-2">
+Keywords
+</p>
+</div>
 
-        <div className="border p-6 rounded">
-          <h2 className="font-bold">
+</div>
+
+</div>
+
+<div className="
+grid
+grid-cols-2
+md:grid-cols-3
+gap-4
+">
+
+<div className="bg-green-50 rounded-2xl p-5">
+  <p>Experience</p>
+  <p className="text-3xl font-bold">
+    {ats.sectionAnalysis.experience.score}
+  </p>
+</div>
+
+<div className="bg-green-50 rounded-2xl p-5">
+  <p>Projects</p>
+  <p className="text-3xl font-bold">
+    {ats.sectionAnalysis.projects.score}
+  </p>
+</div>
+
+<div className="bg-yellow-50 rounded-2xl p-5">
+  <p>Skills</p>
+  <p className="text-3xl font-bold">
+    {ats.sectionAnalysis.skills.score}
+  </p>
+</div>
+
+<div className="bg-green-50 rounded-2xl p-5">
+  <p>Achievements</p>
+  <p className="text-3xl font-bold">
+    {ats.sectionAnalysis.achievements.score}
+  </p>
+</div>
+
+<div className="bg-yellow-50 rounded-2xl p-5">
+  <p>Education</p>
+  <p className="text-3xl font-bold">
+    {ats.sectionAnalysis.education.score}
+  </p>
+</div>
+
+<div className="bg-yellow-50 rounded-2xl p-5">
+  <p>Certifications</p>
+  <p className="text-3xl font-bold">
+    {ats.sectionAnalysis.certifications.score}
+  </p>
+</div>
+
+</div>
+
+</div>
+<div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="
+text-2xl
+font-bold
+mb-6
+">
+Interview Questions Predictor
+<div className="
+bg-white
+rounded-3xl
+border
+border-slate-200
+p-8
+">
+
+<h2 className="
+text-2xl
+font-bold
+mb-6
+">
+Resume Strengths
+</h2>
+
+<div className="space-y-4">
+
+{ats.strengths.map(
+(item,index)=>(
+<div
+key={index}
+className="
+p-4
+rounded-2xl
+bg-green-50
+border
+border-green-100
+"
+>
+✅ {item}
+</div>
+)
+)}
+
+</div>
+
+</div>  
+</h2>
+
+<div className="space-y-3">
+
+{[
+"Tell me about your strongest project.",
+"What was the biggest technical challenge you solved?",
+"Why did you choose this technology stack?",
+"How would you improve your project if rebuilding today?",
+"Describe a measurable impact you created."
+].map((q,index)=>(
+<div
+key={index}
+className="
+p-4
+rounded-2xl
+bg-slate-50
+border
+border-slate-100
+"
+>
+{q}
+</div>
+))}
+
+</div>
+
+</div>
+        
+        
+
+
+       
+
+        
+
+        <div className="
+  bg-white
+  rounded-2xl
+  shadow-lg
+  border
+  border-slate-200
+  p-6
+  ">
+          <h2 className="font-bold text-xl">
             Missing Skills
           </h2>
 
-          <p className="text-5xl font-bold mt-3">
-            {analysis.missingSkills.length}
-          </p>
+          <div className="
+flex
+flex-wrap
+gap-3
+mt-4
+">
+
+{analysis.missingSkills.map(
+(skill,index)=>(
+<div
+key={index}
+className="
+px-4
+py-2
+rounded-full
+bg-red-50
+text-red-700
+font-medium
+"
+>
+{skill}
+</div>
+)
+)}
+
+</div>
+        </div>
+
+        <div className="
+  bg-white
+  rounded-2xl
+  shadow-lg
+  border
+  border-slate-200
+  p-6
+  ">
+          
+
         </div>
 
       </div>
-<div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-  <h2 className="font-bold text-xl mb-4">
-    Resume Section Breakdown
-  </h2>
-
-  <div className="grid md:grid-cols-3 gap-4">
-
-    
-
-    <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-      <p>Experience</p>
-      <p className="text-3xl font-bold">
-        {ats.sectionAnalysis.experience.score}
-      </p>
-    </div>
-<div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-  <h2 className="font-bold text-xl mb-4">
-    Resume Analytics Radar
-  </h2>
-
-  <div
-    style={{
-      width: "100%",
-      height: 450,
-    }}
-  >
-    <ResponsiveContainer>
-      <RadarChart
-        data={radarData}
-      >
-        <PolarGrid />
-
-        <PolarAngleAxis
-          dataKey="subject"
-        />
-
-        <PolarRadiusAxis
-          domain={[0, 100]}
-        />
-
-        <Radar
-          dataKey="score"
-          stroke="#22c55e"
-          fill="#22c55e"
-          fillOpacity={0.5}
-        />
-      </RadarChart>
-    </ResponsiveContainer>
-  </div>
-</div>
-    <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-      <p>Projects</p>
-      <p className="text-3xl font-bold">
-        {ats.sectionAnalysis.projects.score}
-      </p>
-    </div>
-
-    <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-      <p>Education</p>
-      <p className="text-3xl font-bold">
-        {ats.sectionAnalysis.education.score}
-      </p>
-    </div>
-
-    <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-      <p>Certifications</p>
-      <p className="text-3xl font-bold">
-        {ats.sectionAnalysis.certifications.score}
-      </p>
-    </div>
-
-    <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-      <p>Achievements</p>
-      <p className="text-3xl font-bold">
-        {ats.sectionAnalysis.achievements.score}
-      </p>
-    </div>
-
-  </div>
-</div>
-      <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-        <h2 className="font-bold text-xl">
-          Resume Strengths
-        </h2>
-
-        <ul className="mt-4 space-y-2">
-          {ats.strengths.map(
-            (item, index) => (
-              <li key={index}>
-                🚀 {item}
-              </li>
-            )
-          )}
-        </ul>
       </div>
-      <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-  <h2 className="font-bold text-xl">
-    Resume Weaknesses
-  </h2>
-
-  <ul className="mt-4 space-y-2">
-    {ats.weaknesses.map(
-      (item: string, index: number) => (
-        <li key={index}>
-          ⚠️ {item}
-        </li>
-      )
-    )}
-  </ul>
-</div>
-
-
-      <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-        <h2 className="font-bold text-xl">
-          Suggestions
-        </h2>
-
-        <ul className="mt-4 space-y-2">
-          {ats.suggestions.map(
-            (item: string, index: number) => (
-              <li key={index}>
-                💡 {item}
-              </li>
-            )
-          )}
-        </ul>
-      </div>
-
-      <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-        <h2 className="font-bold text-xl">
-          Matched Skills
-        </h2>
-
-        <ul className="mt-2">
-          {analysis.matchedSkills.map(
-            (skill, index) => (
-              <li key={index}>
-                ✅ {skill}
-              </li>
-            )
-          )}
-        </ul>
-      </div>
-
-      <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-        <h2 className="font-bold text-xl">
-          Missing Skills
-        </h2>
-
-        <ul className="mt-2">
-          {analysis.missingSkills.map(
-            (skill, index) => (
-              <li key={index}>
-                ❌ {skill}
-              </li>
-            )
-          )}
-        </ul>
-      </div>
-
-      <div className="
-bg-white
-rounded-2xl
-shadow-lg
-border
-border-slate-200
-p-6
-">
-        <h2 className="font-bold text-xl">
-          Extracted Resume Text
-        </h2>
-
-        <pre className="whitespace-pre-wrap text-sm mt-2">
-          {data.resumeText}
-        </pre>
-      </div>
-
-    </div>
-  );
-}
+    );
+  }
