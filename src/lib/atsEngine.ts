@@ -60,6 +60,21 @@ const redFlags: string[] = [];
 const strengths: string[] = [
   ...roleAnalysis.strengths,
 ];
+if (
+  intelligence.experienceStrengths
+) {
+  strengths.push(
+    ...intelligence.experienceStrengths
+  );
+}
+
+if (
+  intelligence.projectStrengths
+) {
+  strengths.push(
+    ...intelligence.projectStrengths
+  );
+}
 
 strengths.push(
   ...compliance.strengths
@@ -128,24 +143,46 @@ weaknesses.push(
     }
 
     if (intelligence.experienceScore < 60) {
-        weaknesses.push(
-        "Limited professional experience"
-        );
 
-        suggestions.push(
-        "Include internships, freelance work or open-source contributions"
-        );
+    if (
+      intelligence.experienceWeaknesses
+    ) {
+      weaknesses.push(
+        ...intelligence.experienceWeaknesses
+      );
     }
 
-    if (intelligence.projectScore < 70) {
-        weaknesses.push(
-        "Projects lack technical depth"
-        );
+    suggestions.push(
+      "Use stronger action verbs such as Built, Developed, Led, Optimized and Automated"
+    );
 
-        suggestions.push(
-        "Add more technically challenging projects with clear outcomes"
-        );
+    suggestions.push(
+      "Add measurable impact using percentages, users, customers or performance improvements"
+    );
+}
+
+   if (intelligence.projectScore < 70) {
+
+    if (
+      intelligence.projectWeaknesses
+    ) {
+      weaknesses.push(
+        ...intelligence.projectWeaknesses
+      );
     }
+
+    suggestions.push(
+      "Add deployed projects with GitHub repositories"
+    );
+
+    suggestions.push(
+      "Include APIs, authentication, databases or cloud technologies"
+    );
+
+    suggestions.push(
+      "Add measurable project impact such as users, downloads or performance improvements"
+    );
+}
 
     if (intelligence.metricsScore < 60) {
         weaknesses.push(
@@ -196,13 +233,13 @@ weaknesses.push(
     );
     }
 
-    if (
-    intelligence.projectScore < 50
-    ) {
-    redFlags.push(
-        "Projects lack technical depth"
-    );
-    }
+  if (
+intelligence.projectScore < 50
+) {
+redFlags.push(
+    "Projects show limited technical complexity or impact"
+);
+}
 
     if (
     roleAnalysis.missingSkills.length >= 3
