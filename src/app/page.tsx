@@ -39,13 +39,18 @@ export default function Home() {
           {/* Social proof */}
           <div className="social-proof">
             <div className="avatars">
-              <img src="https://i.pravatar.cc/32?img=1" alt="user" />
-              <img src="https://i.pravatar.cc/32?img=2" alt="user" />
-              <img src="https://i.pravatar.cc/32?img=3" alt="user" />
+              
+              <img src="pic1.webp" alt="user" />
+              <img src="pic2.webp" alt="user" />
+              <img src="pic3.webp" alt="user" />
             </div>
+              
+
             <span className="proof-text">
-              <strong>10,000+</strong> resumes analyzed
+              <strong>1000+</strong> resumes analyzed
             </span>
+            
+        
           </div>
 
          <div className="hero-trust">
@@ -54,75 +59,54 @@ export default function Home() {
         </div>
 
         {/* RIGHT column — floating mock UI */}
-        <div className="hero-right">
-          {/* Main resume card */}
-          <div className="resume-card">
-            <div className="resume-toolbar">
-              <button>B</button>
-              <button><em>I</em></button>
-              <button><u>U</u></button>
-              <span className="toolbar-label">Selected Name</span>
-            </div>
+        
+          <div className="hero-right">
+  <div className="hero-dots"></div>
+  
 
-            <div className="resume-body">
-              <div className="resume-name-row">
-                <span className="resume-name-box">John Smith</span>
-                <span className="resume-title-label">Software Engineer</span>
-              </div>
 
-              <div className="resume-contact">
-                <span>✉ john@email.com</span>
-                <span>📞 +1 555 000 000</span>
-                <span>🌐 johnsmith.dev</span>
-              </div>
+            <div className="mockup-wrapper">
+  <div className="resume-card browser-window">
+  <div className="browser-header">
+  <div className="browser-left">
+    <div className="browser-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
 
-              <p className="resume-summary">
-                A passionate software engineer committed to building scalable,
-                user-focused products with clean, efficient code.
-              </p>
+    <div className="browser-nav">
+      <span>‹</span>
+      <span>›</span>
+    </div>
+  </div>
 
-              <p className="resume-section-label">WORK EXPERIENCE</p>
+  <div className="browser-address">
+    nexun.ai
+  </div>
 
-              <div className="resume-job">
-                <div className="resume-job-header">
-                  <strong>Senior Software Engineer</strong>
-                  <span className="resume-dates">Jan 2022 – Feb 2023</span>
-                </div>
-                <div className="resume-job-tags">
-                  <span className="tag blue">Acme Corp</span>
-                  <span className="tag gray">Contract</span>
-                  <span className="tag gray">Remote</span>
-                </div>
-                <ul className="resume-bullets">
-                  <li>Engineered responsive web apps with React and Node.js.</li>
-                  <li>Conducted A/B testing to optimize user engagement.</li>
-                  <li>Implemented accessibility standards for inclusive design.</li>
-                  <li>Mentored junior devs in best practices and coding standards.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+  <div className="browser-right">
+    <span>+</span>
+  </div>
+</div>
 
+  <div className="browser-content">
+    <img
+      src="/AnalysisPage.png"
+      alt="ATS Analysis"
+      className="analysis-preview"
+    />
+  </div>
+</div>
+</div>
           {/* Floating score badge */}
-          <div className="score-badge">
-            <span className="score-label">Resume<br />Score</span>
-            <div className="score-circle">96%</div>
-            <button className="btn-optimize">+ Optimize</button>
-          </div>
+      
 
           {/* Floating AI chat bubble */}
-          <div className="ai-chat-bubble">
-            <div className="chat-question">
-              <span className="chat-avatar">🤖</span>
-              <span>Why is my resume weak?</span>
-            </div>
-            <div className="chat-answer">
-              Your experience was strong.<br />The wording wasn&apos;t. Fixed it.
-            </div>
-            <button className="ask-ai-btn">+ Ask Nexun AI</button>
-          </div>
+         
         </div>
       </section>
+      
 
       {/* ── TRUSTED BY ── */}
       <section className="trusted-by">
