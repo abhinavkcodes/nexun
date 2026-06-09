@@ -13,22 +13,26 @@ export default function Home() {
           <span className="hero-badge">One time purchase · No subscription</span>
 
           <h1 className="hero-heading">
-            Stop struggling<br />
-            with Resumes.<br />
-            <em>Let AI do the<br />hard part.</em>
-          </h1>
+  <span className="heading-light">
+    Stop struggling with Resumes.
+  </span>
+
+  <span className="heading-dark">
+    Let AI do the hard part.
+  </span>
+</h1>
 
           <p className="hero-sub">
-            From wording to formatting, our AI resume analyzer helps you create
-            a polished resume that stands out in seconds.
-          </p>
+  Upload your resume and get ATS scoring, recruiter insights,
+  keyword optimization, and actionable improvements in seconds.
+</p>
 
           <div className="hero-ctas">
             <Link href="/dashboard" className="cta-primary">
-              Get Started — It&apos;s Free
+             Analyze My Resume
             </Link>
             <Link href="/upload" className="cta-secondary">
-              ↑ Upload My Resume
+              View Sample Report
             </Link>
           </div>
 
@@ -40,19 +44,13 @@ export default function Home() {
               <img src="https://i.pravatar.cc/32?img=3" alt="user" />
             </div>
             <span className="proof-text">
-              <strong>28,452</strong> landed interviews last month
+              <strong>10,000+</strong> resumes analyzed
             </span>
           </div>
 
-          <div className="reviews-badge">
-            <span className="check-icon">✓</span>
-            <span>
-              <strong>3,769</strong> Reviews on{" "}
-              <a href="https://reviews.io" target="_blank" rel="noopener noreferrer">
-                Reviews.io
-              </a>
-            </span>
-          </div>
+         <div className="hero-trust">
+  ATS Friendly • AI Powered • Recruiter Focused
+</div>
         </div>
 
         {/* RIGHT column — floating mock UI */}
