@@ -20,7 +20,16 @@ const roleSkills: Record<string, string[]> = {
     "rest api",
     "git",
   ],
-
+"full stack developer": [
+  "react",
+  "next.js",
+  "node.js",
+  "express",
+  "postgresql",
+  "mongodb",
+  "api",
+  "git",
+],
   "data scientist": [
     "python",
     "sql",
@@ -75,18 +84,15 @@ export function analyzeResume(
   );
 
   const roleMatchScore = Math.round(
-  (matchedSkills.length /
+  (
+    matchedSkills.length /
     Math.max(
-      matchedSkills.length +
-      missingSkills.length,
+      skills.length,
       1
-    )) * 85
+    )
+  ) * 100
 );
-const adjustedRoleScore =
-  Math.min(
-    90,
-    roleMatchScore
-  );
+
 
   const strengths =
     matchedSkills.map(
@@ -101,8 +107,7 @@ const adjustedRoleScore =
     );
 
   return {
-  roleMatchScore:
-    adjustedRoleScore,
+  roleMatchScore,
   matchedSkills,
   missingSkills,
   strengths,

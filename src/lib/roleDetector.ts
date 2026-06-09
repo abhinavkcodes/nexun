@@ -179,14 +179,49 @@ export function detectRole(
   ] of Object.entries(
     roleDatabase
   )) {
-    const matches =
-      keywords.filter(
-        (keyword) =>
-          text.includes(keyword)
-      );
+   const matches =
+  keywords.filter(
+    keyword =>
+      text.includes(keyword)
+  );
 
-    const score =
-      matches.length;
+let score =
+  matches.length;
+
+// Core skill weighting
+if (
+  role === "frontend developer"
+) {
+  if (text.includes("react")) score += 2;
+  if (text.includes("next.js")) score += 2;
+  if (text.includes("typescript")) score += 1;
+}
+
+if (
+  role === "full stack developer"
+) {
+  if (text.includes("react")) score += 2;
+  if (text.includes("node.js")) score += 2;
+  if (text.includes("express")) score += 1;
+  if (text.includes("postgresql")) score += 1;
+  if (text.includes("mongodb")) score += 1;
+}
+
+if (
+  role === "ai engineer"
+) {
+  if (text.includes("llm")) score += 3;
+  if (text.includes("langchain")) score += 2;
+  if (text.includes("rag")) score += 2;
+}
+
+if (
+  role === "data analyst"
+) {
+  if (text.includes("sql")) score += 2;
+  if (text.includes("dashboard")) score += 2;
+  if (text.includes("excel")) score += 1;
+}
 
     if (score > bestScore) {
       bestScore = score;
@@ -196,20 +231,42 @@ export function detectRole(
     }
   }
 
-  const confidence =
-    Math.min(
-      100,
-      Math.round(
-        (bestScore /
-          Math.max(
-            roleDatabase[
-              bestRole
-            ].length,
-            1
-          )) *
-          100
-      )
-    );
+  let adjustedScore =
+  bestScore;
+
+if (
+  bestRole ===
+    "frontend developer" &&
+  (
+    text.includes("react") ||
+    text.includes("next.js")
+  )
+) {
+  adjustedScore += 2;
+}
+
+const confidence =
+  Math.min(
+    100,
+    Math.round(
+      (
+        adjustedScore /
+        Math.max(
+          roleDatabase[
+            bestRole
+          ].length,
+          1
+        )
+      ) * 100
+    )
+  );
+  if (
+  text.includes("react") &&
+  text.includes("node.js")
+) {
+  bestRole =
+    "full stack developer";
+}
 
   return {
     role: bestRole,
