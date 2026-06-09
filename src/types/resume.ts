@@ -3,5 +3,5 @@ export interface ResumeData {
   fileSize?: number;
   fileType?: string;
   resumeText?: string;
-  jobDescription: string;
+  
 }

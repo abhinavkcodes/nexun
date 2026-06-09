@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "../components/Navbar";
 
 export const metadata: Metadata = {
   title: "Nexun",
@@ -15,9 +14,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <Navbar />
-        <main className="p-6">{children}</main>
-      </body>
+  <main>
+    {children}
+  </main>
+</body>
     </html>
   );
 }

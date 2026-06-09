@@ -1,5 +1,12 @@
 "use client";
-
+import {
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer
+} from "recharts";
 import { useEffect, useState } from "react";
 import { getResumeData } from "../lib/storage";
 import { analyzeResume } from "../lib/analyzer";
@@ -36,6 +43,15 @@ const intelligence =
   analysis,
   intelligence
 );
+console.log(
+  "HAS NEXUN:",
+  data.resumeText.includes("Nexun")
+);
+
+console.log(
+  "HAS MEDITRACK:",
+  data.resumeText.includes("MediTrack")
+);
 console.log(data.resumeText);
 console.log("ATS OBJECT");
 console.log(ats);
@@ -51,11 +67,49 @@ const atsLabel =
     : ats.overallScore >= 50
     ? "Average Match"
     : "Needs Improvement";
-
+const radarData = [
+  {
+    subject: "Skills",
+    score:
+      ats.sectionAnalysis.skills.score
+  },
+  {
+    subject: "Experience",
+    score:
+      ats.sectionAnalysis.experience.score
+  },
+  {
+    subject: "Projects",
+    score:
+      ats.sectionAnalysis.projects.score
+  },
+  {
+    subject: "Achievements",
+    score:
+      ats.sectionAnalysis.achievements.score
+  },
+  {
+    subject: "ATS",
+    score:
+      ats.overallScore
+  },
+  {
+    subject: "Role Match",
+    score:
+      ats.roleMatchScore
+  }
+];
   return (
     <div className="space-y-6">
 
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
         <h2 className="font-bold text-xl">
           Resume File
         </h2>
@@ -65,7 +119,14 @@ const atsLabel =
         <p>Type: {data.fileType}</p>
       </div>
 
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
   <h2 className="font-bold text-xl">
     Detected Role
   </h2>
@@ -78,7 +139,14 @@ const atsLabel =
     Confidence: {detectedRole.confidence}%
   </p>
 </div>
-<div className="border p-4 rounded">
+<div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
   <h2 className="font-bold text-xl">
     Role Detection Signals
   </h2>
@@ -142,8 +210,143 @@ const atsLabel =
         </div>
 
       </div>
+<div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+  <h2 className="font-bold text-xl mb-4">
+    Resume Section Breakdown
+  </h2>
 
-      <div className="border p-4 rounded">
+  <div className="grid md:grid-cols-3 gap-4">
+
+    
+
+    <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+      <p>Experience</p>
+      <p className="text-3xl font-bold">
+        {ats.sectionAnalysis.experience.score}
+      </p>
+    </div>
+<div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+  <h2 className="font-bold text-xl mb-4">
+    Resume Analytics Radar
+  </h2>
+
+  <div
+    style={{
+      width: "100%",
+      height: 450,
+    }}
+  >
+    <ResponsiveContainer>
+      <RadarChart
+        data={radarData}
+      >
+        <PolarGrid />
+
+        <PolarAngleAxis
+          dataKey="subject"
+        />
+
+        <PolarRadiusAxis
+          domain={[0, 100]}
+        />
+
+        <Radar
+          dataKey="score"
+          stroke="#22c55e"
+          fill="#22c55e"
+          fillOpacity={0.5}
+        />
+      </RadarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+    <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+      <p>Projects</p>
+      <p className="text-3xl font-bold">
+        {ats.sectionAnalysis.projects.score}
+      </p>
+    </div>
+
+    <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+      <p>Education</p>
+      <p className="text-3xl font-bold">
+        {ats.sectionAnalysis.education.score}
+      </p>
+    </div>
+
+    <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+      <p>Certifications</p>
+      <p className="text-3xl font-bold">
+        {ats.sectionAnalysis.certifications.score}
+      </p>
+    </div>
+
+    <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
+      <p>Achievements</p>
+      <p className="text-3xl font-bold">
+        {ats.sectionAnalysis.achievements.score}
+      </p>
+    </div>
+
+  </div>
+</div>
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
         <h2 className="font-bold text-xl">
           Resume Strengths
         </h2>
@@ -158,7 +361,14 @@ const atsLabel =
           )}
         </ul>
       </div>
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
   <h2 className="font-bold text-xl">
     Resume Weaknesses
   </h2>
@@ -175,7 +385,14 @@ const atsLabel =
 </div>
 
 
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
         <h2 className="font-bold text-xl">
           Suggestions
         </h2>
@@ -191,7 +408,14 @@ const atsLabel =
         </ul>
       </div>
 
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
         <h2 className="font-bold text-xl">
           Matched Skills
         </h2>
@@ -207,7 +431,14 @@ const atsLabel =
         </ul>
       </div>
 
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
         <h2 className="font-bold text-xl">
           Missing Skills
         </h2>
@@ -223,7 +454,14 @@ const atsLabel =
         </ul>
       </div>
 
-      <div className="border p-4 rounded">
+      <div className="
+bg-white
+rounded-2xl
+shadow-lg
+border
+border-slate-200
+p-6
+">
         <h2 className="font-bold text-xl">
           Extracted Resume Text
         </h2>
