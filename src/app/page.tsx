@@ -1,7 +1,34 @@
+
+"use client";
+
 import Navbar from "../components/Navbar";
 import Link from "next/link";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+const router = useRouter();
+
+const [isScanning, setIsScanning] = useState(false);
+
+const handleResumeUpload = async (
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  setIsScanning(true);
+
+  console.log("Uploaded Resume:", file);
+
+  // fake ATS scan
+  await new Promise((resolve) => setTimeout(resolve, 2500));
+
+  router.push("/analysis");
+};
   return (
     <main className="home-page">
       <Navbar />
@@ -10,7 +37,7 @@ export default function Home() {
       <section className="hero">
         {/* LEFT column */}
         <div className="hero-left">
-          <span className="hero-badge">One time purchase · No subscription</span>
+          
 
           <h1 className="hero-heading">
   <span className="heading-light">
@@ -27,14 +54,27 @@ export default function Home() {
   keyword optimization, and actionable improvements in seconds.
 </p>
 
-          <div className="hero-ctas">
-            <Link href="/dashboard" className="cta-primary">
-             Analyze My Resume
-            </Link>
-            <Link href="/upload" className="cta-secondary">
-              View Sample Report
-            </Link>
-          </div>
+          <input
+  ref={fileInputRef}
+  type="file"
+  accept=".pdf,.doc,.docx"
+  style={{ display: "none" }}
+  onChange={handleResumeUpload}
+/>
+
+<div className="hero-ctas">
+  <button
+  className="cta-primary"
+  disabled={isScanning}
+  onClick={() => fileInputRef.current?.click()}
+>
+  {isScanning ? "Scanning Resume..." : "Analyze My Resume"}
+</button>
+
+  <Link href="/upload" className="cta-secondary">
+      Build Resume
+  </Link>
+</div>
 
           {/* Social proof */}
           <div className="social-proof">
