@@ -1,3 +1,4 @@
+import { analyzeSections } from "./sectionAnalyzer";
 export interface ATSComplianceResult {
   score: number;
 
@@ -6,16 +7,26 @@ export interface ATSComplianceResult {
     phone: boolean;
     linkedin: boolean;
     github: boolean;
+
+    skillsSection: boolean;
+    experienceSection: boolean;
+    educationSection: boolean;
+    projectsSection: boolean;
   };
 
   warnings: string[];
   strengths: string[];
 }
 
-export function analyzeATSCompliance(
+
+    export function analyzeATSCompliance(
   resumeText: string
 ): ATSComplianceResult {
+
   const text = resumeText.toLowerCase();
+
+  const sections =
+    analyzeSections(resumeText);
 
   let score = 0;
 
@@ -33,50 +44,142 @@ export function analyzeATSCompliance(
     );
 
   const linkedin =
-    text.includes("linkedin.com") ||
-    text.includes("linkedin");
+    text.includes("linkedin.com");
 
   const github =
-    text.includes("github.com") ||
-    text.includes("github");
+    text.includes("github.com");
 
-  if (email) {
-    score += 25;
-    strengths.push("Email detected");
-  } else {
-    warnings.push("Missing email address");
-  }
+  const skillsSection =
+    sections.skills.found;
 
-  if (phone) {
-    score += 25;
-    strengths.push("Phone number detected");
-  } else {
-    warnings.push("Missing phone number");
-  }
+  const experienceSection =
+    sections.experience.found;
 
-  if (linkedin) {
-    score += 25;
-    strengths.push("LinkedIn profile detected");
-  } else {
-    warnings.push("Missing LinkedIn profile");
-  }
+  const educationSection =
+    sections.education.found;
 
-  if (github) {
-    score += 25;
-    strengths.push("GitHub profile detected");
-  } else {
-    warnings.push("Missing GitHub profile");
-  }
+  const projectsSection =
+    sections.projects.found;
+    if (email) {
+  score += 10;
+  strengths.push(
+    "Professional email detected"
+  );
+} else {
+  warnings.push(
+    "Missing email address"
+  );
+}
 
-  return {
-    score,
-    checks: {
-      email,
-      phone,
-      linkedin,
-      github,
-    },
-    warnings,
-    strengths,
-  };
+if (phone) {
+  score += 10;
+  strengths.push(
+    "Phone number detected"
+  );
+} else {
+  warnings.push(
+    "Missing phone number"
+  );
+}
+
+if (linkedin) {
+  score += 10;
+  strengths.push(
+    "LinkedIn profile detected"
+  );
+} else {
+  warnings.push(
+    "LinkedIn profile missing"
+  );
+}
+
+if (github) {
+  score += 10;
+  strengths.push(
+    "GitHub profile detected"
+  );
+} else {
+  warnings.push(
+    "GitHub profile missing"
+  );
+}
+    if (skillsSection) {
+  score += 15;
+} else {
+  warnings.push(
+    "Skills section not found"
+  );
+}
+
+if (experienceSection) {
+  score += 15;
+} else {
+  warnings.push(
+    "Experience section not found"
+  );
+}
+
+if (educationSection) {
+  score += 10;
+} else {
+  warnings.push(
+    "Education section not found"
+  );
+}
+
+if (projectsSection) {
+  score += 10;
+} else {
+  warnings.push(
+    "Projects section not found"
+  );
+}
+if (resumeText.length > 1000) {
+  score += 10;
+
+  strengths.push(
+    "Resume contains sufficient detail"
+  );
+} else {
+  warnings.push(
+    "Resume content appears limited"
+  );
+}
+
+const metricCount =
+  (
+    resumeText.match(
+      /\d+%|\d+\+/g
+    ) || []
+  ).length;
+
+if (metricCount >= 2) {
+  score += 10;
+
+  strengths.push(
+    "Contains measurable achievements"
+  );
+} else {
+  warnings.push(
+    "Few quantified achievements detected"
+  );
+}
+return {
+  score: Math.min(score, 100),
+
+  checks: {
+    email,
+    phone,
+    linkedin,
+    github,
+
+    skillsSection,
+    experienceSection,
+    educationSection,
+    projectsSection,
+  },
+
+  warnings,
+  strengths,
+};
 }
