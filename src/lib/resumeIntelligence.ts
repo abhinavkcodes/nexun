@@ -1,139 +1,115 @@
-import {
-  analyzeExperience
-} from "./experienceAnalyzer";
+import { analyzeExperience } from "./experienceAnalyzer";
+import { analyzeSections } from "./sectionAnalyzer";
+import { analyzeProject } from "./projectAnalyzer";
 
-import {
-  analyzeSections
-} from "./sectionAnalyzer";
-import {
-  analyzeProject
-} from "./projectAnalyzer";
-export function analyzeResumeIntelligence(
-  resumeText: string
-) {
+export function analyzeResumeIntelligence(resumeText: string) {
   const text = resumeText.toLowerCase();
-const sections =
-  analyzeSections(
-    resumeText
-  );
 
-const experienceAnalysis =
-  analyzeExperience(
-    sections.experience.content
-  );
-  const experienceScore =
-  experienceAnalysis.score;
-  const projectAnalysis =
-  analyzeProject(
-    sections.projects.content
-  );
-console.log(
-  "PROJECT SECTION:",
-  sections.projects.content
-);
-console.log(
-  "RAW PROJECT CONTENT:",
-  sections.projects.content
-);
-const projectScore =
-  projectAnalysis.score;
-  const hasSkills =
-    text.includes("skills");
+  const sections = analyzeSections(resumeText);
+  const experienceAnalysis = analyzeExperience(sections.experience.content);
+  const projectAnalysis = analyzeProject(sections.projects.content);
 
-  const hasProjects =
-    text.includes("projects");
+  const experienceScore = experienceAnalysis.score;
+  const projectScore = projectAnalysis.score;
 
-  const hasExperience =
-    text.includes("experience") ||
-    text.includes(
-      "professional experience"
-    );
-
-  const hasEducation =
-    text.includes("education");
-
-  const hasCertifications =
-    text.includes("certifications");
-
-  const hasAchievements =
-    text.includes("achievements");
+  // ── Structure score ─────────────────────────────────────────────────────────
+  const hasSkills        = sections.skills.found;
+  const hasProjects      = sections.projects.found;
+  const hasExperience    = sections.experience.found;
+  const hasEducation     = sections.education.found;
+  const hasCertifications = sections.certifications.found;
+  const hasAchievements  = sections.achievements.found;
 
   let structureScore = 0;
+  if (hasSkills)          structureScore += 15;
+  if (hasProjects)        structureScore += 20;
+  if (hasExperience)      structureScore += 25;
+  if (hasEducation)       structureScore += 15;
+  if (hasCertifications)  structureScore += 10;
+  if (hasAchievements)    structureScore += 15;
+  structureScore = Math.min(structureScore, 100);
 
- if (hasSkills) structureScore += 15;
-if (hasProjects) structureScore += 20;
-if (hasExperience) structureScore += 25;
-if (hasEducation) structureScore += 15;
-if (hasCertifications) structureScore += 10;
-if (hasAchievements) structureScore += 15;
-
-  structureScore = Math.min(
-    structureScore,
-    100
-  );
-
-  
-
-  const metrics =
-    resumeText.match(
-      /\d+%|\d+\+|\d+,?\d*/g
-    ) || [];
-
-  const metricsScore =
-  Math.min(
-    100,
-    metrics.length * 2
-  );
-
-  const achievementKeywords = [
-    "winner",
-    "won",
-    "hackathon",
-    "rank",
-    "top",
-    "award",
-    "icpc",
+  // ── Metrics score ───────────────────────────────────────────────────────────
+  // Only match patterns that represent real achievements, not bare numbers,
+  // phone digits, years, or GPA values.
+  //
+  // Valid:   "35%", "10,000 users", "50+ students", "$2k revenue"
+  // Invalid: "2024", "+91 9876543210", "8.5 CGPA", "3rd year"
+  const metricPatterns = [
+    /\d+%/g,                             // percentages: 35%, 99%
+    /\d[\d,]*\+/g,                       // "100+", "1,000+"
+    /\$[\d,]+/g,                         // dollar amounts
+    /\d[\d,]*\s*(users|customers|clients|students|records|downloads|requests|projects|transactions|sales|leads|tickets|bugs|issues|lines of code|loc)\b/gi,
+    /\b(increased|reduced|improved|boosted|cut|grew|saved|generated)\b.{0,40}\d+/gi,
   ];
 
-  const achievementMatches =
-    achievementKeywords.filter(
-      (word) =>
-        text.includes(word)
-    ).length;
+  const allMetricMatches: string[] = [];
+  for (const pattern of metricPatterns) {
+    const found = resumeText.match(pattern) ?? [];
+    allMetricMatches.push(...found);
+  }
 
-  const achievementScore =
-    Math.min(
-      100,
-      achievementMatches * 20
-    );
+  // Deduplicate by trimming and lowercasing
+  const uniqueMetrics = [...new Set(allMetricMatches.map((m) => m.trim().toLowerCase()))];
+  const metricsScore = Math.min(100, uniqueMetrics.length * 12);
 
-  const resumeQualityScore =
-    Math.round(
-      structureScore * 0.25 +
-      experienceScore * 0.20 +
-      projectScore * 0.20 +
-      metricsScore * 0.15 +
-      achievementScore * 0.20
-    );
+  // ── Achievement score ───────────────────────────────────────────────────────
+  const achievementKeywords = [
+    "winner", "won", "hackathon", "rank", "ranked", "top",
+    "award", "icpc", "olympiad", "scholarship", "merit",
+    "gold", "silver", "bronze", "finalist", "champion",
+  ];
+  const achievementMatches = achievementKeywords.filter((word) =>
+    text.includes(word)
+  ).length;
+  const achievementScore = Math.min(100, achievementMatches * 20);
 
-  return {
-    structureScore,
-    experienceScore,
-    projectScore,
-    metricsScore,
-    achievementScore,
-    resumeQualityScore,
-    metricsFound:
-      metrics.length,
-      experienceStrengths:
-  experienceAnalysis.strengths,
+  // ── Readability score ───────────────────────────────────────────────────────
+  // Based on avg sentence length, bullet usage, and section organisation.
+  const sentences = resumeText.split(/[.!?]+/).filter((s) => s.trim().length > 10);
+  const avgWordsPerSentence =
+    sentences.length > 0
+      ? sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / sentences.length
+      : 20;
 
-experienceWeaknesses:
-  experienceAnalysis.weaknesses,
-  projectStrengths:
-  projectAnalysis.strengths,
+  const bulletCount = (resumeText.match(/[-•*▸►✓]/g) ?? []).length;
+  let readabilityScore = 60;
+  if (avgWordsPerSentence < 20)  readabilityScore += 15; // concise bullets
+  if (avgWordsPerSentence < 15)  readabilityScore += 10;
+  if (bulletCount >= 10)         readabilityScore += 10;
+  if (structureScore >= 70)      readabilityScore += 10; // well organised
+  if (resumeText.length > 1500)  readabilityScore += 5;
+  readabilityScore = Math.min(readabilityScore, 100);
 
-projectWeaknesses:
-  projectAnalysis.weaknesses,
-  };
+  // ── Page / word count ───────────────────────────────────────────────────────
+  const wordCount = resumeText.split(/\s+/).filter(Boolean).length;
+  // Heuristic: ~500 words per page for a resume
+  const pageCount = Math.max(1, Math.round(wordCount / 500));
+
+  // ── Overall quality ─────────────────────────────────────────────────────────
+  const resumeQualityScore = Math.round(
+    structureScore    * 0.25 +
+    experienceScore   * 0.20 +
+    projectScore      * 0.20 +
+    metricsScore      * 0.15 +
+    achievementScore  * 0.20
+  );
+  const keywordDensityScore = 0;
+return {
+  structureScore,
+  experienceScore,
+  projectScore,
+  metricsScore,
+  achievementScore,
+  keywordDensityScore,
+  resumeQualityScore,
+  readabilityScore,
+  wordCount,
+  pageCount,
+  metricsFound: uniqueMetrics.length,
+  experienceStrengths: experienceAnalysis.strengths,
+  experienceWeaknesses: experienceAnalysis.weaknesses,
+  projectStrengths: projectAnalysis.strengths,
+  projectWeaknesses: projectAnalysis.weaknesses,
+};
 }
