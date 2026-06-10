@@ -41,6 +41,7 @@ export interface ReadabilityAnalysis {
 }
 
 export interface ResumeIntelligenceResult {
+  
   // Section scores
   structureScore: number;
   experienceScore: number;
@@ -53,6 +54,7 @@ export interface ResumeIntelligenceResult {
   resumeLength: ResumeLengthAnalysis;
   ats: ATSAnalysis;
   contact: ContactInfo;
+  sections: ReturnType<typeof analyzeSections>;
 
   // Top-level derived
   overallScore: number;     // weighted composite 0–100
@@ -612,31 +614,31 @@ const ats = analyzeATS(resumeText, readability.bulletCount, wordCount, resumeLen
   };
 
   return {
-    structureScore,
-    experienceScore,
-    projectScore,
-    metricsScore,
-    achievementScore,
+  structureScore,
+  experienceScore,
+  projectScore,
+  metricsScore,
+  achievementScore,
 
-    readability,
-    resumeLength,
-    ats,
-    contact,
+  readability,
+  resumeLength,
+  ats,
+  contact,
+  sections, // ← ADD THIS LINE
 
-    overallScore,
-    parseSuccess,
-    wordCount,
+  overallScore,
+  parseSuccess,
+  wordCount,
 
-    experienceStrengths:  experienceAnalysis.strengths,
-    experienceWeaknesses: experienceAnalysis.weaknesses,
-    projectStrengths:     projectAnalysis.strengths,
-    projectWeaknesses:    projectAnalysis.weaknesses,
+  experienceStrengths: experienceAnalysis.strengths,
+  experienceWeaknesses: experienceAnalysis.weaknesses,
+  projectStrengths: projectAnalysis.strengths,
+  projectWeaknesses: projectAnalysis.weaknesses,
 
-    // Backward-compat shims
-    readabilityScore:    readability.score,
-    readingGradeLevel:   readability.gradeLevel,
-    pageCount:           resumeLength.pageCount,
-    resumeLengthStatus:  legacyStatusMap[resumeLength.status],
-   metricsFound: uniqueMetrics.length,
-  };
+  readabilityScore: readability.score,
+  readingGradeLevel: readability.gradeLevel,
+  pageCount: resumeLength.pageCount,
+  resumeLengthStatus: legacyStatusMap[resumeLength.status],
+  metricsFound: uniqueMetrics.length,
+};
 }
