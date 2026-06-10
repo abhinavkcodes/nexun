@@ -16,46 +16,84 @@ export interface SectionResult {
 }
 
 export interface SectionAnalysis {
+  professionalSummary: SectionResult;
   skills: SectionResult;
   experience: SectionResult;
   projects: SectionResult;
   education: SectionResult;
   certifications: SectionResult;
   achievements: SectionResult;
+  leadershipActivities: SectionResult;
 }
-
 // ─── Section heading patterns (exact match after normalisation) ───────────────
 
 const SECTION_PATTERNS: Record<string, string[]> = {
+  professionalSummary: [
+    "professional summary",
+    "summary",
+    "career summary",
+    "profile",
+    "professional profile",
+    "executive summary",
+    "career profile",
+    "about me",
+    "objective",
+    "career objective",
+    "professional objective",
+  ],
+
   skills: [
     "skills", "technical skills", "technologies", "tech stack",
     "core competencies", "technical competencies", "tools & technologies",
     "tools and technologies", "programming languages", "languages & tools",
     "languages and tools", "key skills",
   ],
+
   experience: [
     "experience", "work experience", "professional experience",
     "employment", "employment history", "work history",
     "internship", "internships", "industry experience",
   ],
+
   projects: [
     "projects", "personal projects", "academic projects", "key projects",
     "notable projects", "selected projects", "project experience",
     "side projects", "open source",
   ],
+
   education: [
     "education", "academic background", "academic qualifications",
     "qualifications", "educational background", "academic history",
   ],
+
   certifications: [
     "certifications", "certificates", "licenses", "credentials",
     "professional certifications", "courses", "online courses", "training",
     "moocs",
   ],
+
   achievements: [
-    "achievements", "awards", "accomplishments", "honors", "honours",
-    "recognition", "competitive programming", "extracurricular",
-    "leadership", "activities", "publications", "patents",
+    "achievements",
+    "awards",
+    "accomplishments",
+    "honors",
+    "honours",
+    "recognition",
+    "competitive programming",
+    "publications",
+    "patents",
+  ],
+
+  leadershipActivities: [
+    "leadership",
+    "leadership & activities",
+    "leadership and activities",
+    "activities",
+    "extracurricular",
+    "extracurricular activities",
+    "positions of responsibility",
+    "student leadership",
+    "campus involvement",
   ],
 };
 
@@ -252,25 +290,40 @@ function scoreGenericSection(content: string, sectionName: string): SectionResul
 
 export function analyzeSections(resumeText: string): SectionAnalysis {
   return {
+    professionalSummary: scoreGenericSection(
+      extractSection(resumeText, SECTION_PATTERNS.professionalSummary),
+      "Professional Summary"
+    ),
+
     skills: scoreSkillsSection(
       extractSection(resumeText, SECTION_PATTERNS.skills)
     ),
+
     experience: scoreExperienceSection(
       extractSection(resumeText, SECTION_PATTERNS.experience)
     ),
+
     projects: scoreProjectsSection(
       extractSection(resumeText, SECTION_PATTERNS.projects)
     ),
+
     education: scoreEducationSection(
       extractSection(resumeText, SECTION_PATTERNS.education)
     ),
+
     certifications: scoreGenericSection(
       extractSection(resumeText, SECTION_PATTERNS.certifications),
       "Certifications"
     ),
+
     achievements: scoreGenericSection(
       extractSection(resumeText, SECTION_PATTERNS.achievements),
       "Achievements"
+    ),
+
+    leadershipActivities: scoreGenericSection(
+      extractSection(resumeText, SECTION_PATTERNS.leadershipActivities),
+      "Leadership & Activities"
     ),
   };
 }

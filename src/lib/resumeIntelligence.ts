@@ -428,13 +428,15 @@ function analyzeContact(resumeText: string): ContactInfo {
 
 function calcStructureScore(sections: ReturnType<typeof analyzeSections>): number {
   const weights: Record<string, number> = {
-    experience:     30,
-    projects:       20,
-    skills:         18,
-    education:      17,
-    achievements:   10,
-    certifications:  5,
-  };
+  professionalSummary: 10,
+  skills: 18,
+  experience: 25,
+  projects: 18,
+  education: 15,
+  certifications: 4,
+  achievements: 5,
+  leadershipActivities: 5,
+};
 
   let score = 0;
   for (const [key, weight] of Object.entries(weights)) {
@@ -484,12 +486,16 @@ function calcParseScore(
   score += Math.round(contact.completenessScore * 0.2);
 
   // Core sections (30 pts)
-  if (sections.skills.found)          score += 6;
-  if (sections.experience.found)      score += 10;
-  if (sections.projects.found)        score += 6;
-  if (sections.education.found)       score += 6;
-  if (sections.certifications.found)  score += 1;
-  if (sections.achievements.found)    score += 1;
+ if (sections.professionalSummary?.found) score += 2;
+
+if (sections.skills.found)               score += 6;
+if (sections.experience.found)           score += 8;
+if (sections.projects.found)             score += 5;
+if (sections.education.found)            score += 5;
+
+if (sections.certifications?.found)      score += 1;
+if (sections.achievements?.found)        score += 1;
+if (sections.leadershipActivities?.found) score += 2;
 
   // Length quality (10 pts)
   score += Math.round((resumeLength.score / 100) * 10);

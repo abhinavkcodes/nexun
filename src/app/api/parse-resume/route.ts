@@ -28,12 +28,24 @@ const COMMON_KEYWORDS = [
 function getResumeStrength(
   score: number
 ): "Weak" | "Fair" | "Good" | "Strong" | "Excellent" {
-  if (score >= 88) return "Excellent";
-  if (score >= 74) return "Strong";
-  if (score >= 58) return "Good";
-  if (score >= 40) return "Fair";
+  if (score >= 85) return "Excellent";
+  if (score >= 72) return "Strong";
+  if (score >= 55) return "Good";
+  if (score >= 38) return "Fair";
   return "Weak";
 }
+// Rough percentile based on score distribution observed in resume tools
+// (calibrate over time with your real data)
+function estimatePercentile(score: number): number {
+  if (score >= 90) return 95;
+  if (score >= 80) return 85;
+  if (score >= 70) return 70;
+  if (score >= 60) return 52;
+  if (score >= 50) return 35;
+  if (score >= 40) return 20;
+  return 10;
+}
+
 
 // ── Section health rows for the dashboard ───────────────────────────────────
 function buildSectionRows(
@@ -92,17 +104,7 @@ export async function POST(req: NextRequest) {
     const sectionAnalysis = analyzeSections(resumeText);
     const resumeLines = generateResumePreview(resumeText);
 
-// ❌ Remove this entire block:
-const atsChecklist = [
-  { label: "Email address", ok: /\S+@\S+\.\S+/.test(resumeText) },
-  { label: "Phone number",  ok: /(\+?\d[\d\s\-()]{8,})/.test(resumeText) },
-  { label: "LinkedIn URL",  ok: resumeText.toLowerCase().includes("linkedin") },
-  { label: "GitHub profile",ok: resumeText.toLowerCase().includes("github") },
-  { label: "Skills section",    ok: sectionAnalysis.skills.found },
-  { label: "Experience section",ok: sectionAnalysis.experience.found },
-  { label: "Education section", ok: sectionAnalysis.education.found },
-  { label: "Certifications",    ok: sectionAnalysis.certifications.found },
-];
+
 
 // ✅ Replace with — uses already-computed intelligence values, single source of truth:
 const atsChecklist = [
@@ -117,8 +119,12 @@ const atsChecklist = [
   { label: "Certifications",    ok: sectionAnalysis.certifications.found },
   { label: "Achievements",      ok: sectionAnalysis.achievements.found },
   // ATS risk flags surfaced as checklist items
-  ...intelligence.ats.flags.slice(0, 3).map((flag) => ({
-    label: flag.length > 60 ? flag.slice(0, 57) + "…" : flag,
+  ...(intelligence.ats?.flags ?? [])
+  .slice(0, 3)
+  .map((flag) => ({
+    label: flag.length > 60
+      ? flag.slice(0, 57) + "…"
+      : flag,
     ok: false,
   })),
 ];
@@ -140,6 +146,7 @@ const atsChecklist = [
 
   overallScore: atsResult.overallScore,
   atsScore: atsResult.atsCompliance.score,
+  percentileEstimate: estimatePercentile(atsResult.overallScore),
 
   experienceScore: atsResult.experienceScore,
   projectScore: atsResult.projectScore,
