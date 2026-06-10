@@ -12,41 +12,22 @@ export default function Home() {
 const router = useRouter();
 
 const [isScanning, setIsScanning] = useState(false);
+
 const handleResumeUpload = async (
   event: React.ChangeEvent<HTMLInputElement>
 ) => {
   const file = event.target.files?.[0];
+
   if (!file) return;
 
   setIsScanning(true);
 
-  try {
-    const formData = new FormData();
-    formData.append("resume", file);
+  console.log("Uploaded Resume:", file);
 
-    const response = await fetch("/api/parse-resume", {
-      method: "POST",
-      body: formData,
-    });
+  // fake ATS scan
+  await new Promise((resolve) => setTimeout(resolve, 2500));
 
-    const result = await response.json();
-
-    if (!result.success) {
-      console.error("API error:", result.error);
-      setIsScanning(false);
-      alert("Analysis failed: " + (result.error ?? "Unknown error"));
-      return;
-    }
-
-    localStorage.setItem("analysisData", JSON.stringify(result.analysisData));
-
-    router.push("/analysis");
-
-  } catch (err) {
-    console.error("Upload error:", err);
-    setIsScanning(false);
-    alert("Something went wrong. Please try again.");
-  }
+  router.push("/analysis");
 };
   return (
     <main className="home-page">
@@ -60,19 +41,14 @@ const handleResumeUpload = async (
 
           <h1 className="hero-heading">
   <span className="heading-light">
-    Get More Interviews.
+    Stop struggling with Resumes.
   </span>
 
   <span className="heading-dark">
-    Fix Your Resume in Seconds.
+    Let AI do the hard part.
   </span>
 </h1>
-<div className="hero-features">
-  <span>ATS Score</span>
-  <span>Missing Keywords</span>
-  <span>Recruiter Feedback</span>
-  <span>Resume Builder</span>
-</div>
+
           <p className="hero-sub">
   Upload your resume and get ATS scoring, recruiter insights,
   keyword optimization, and actionable improvements in seconds.
@@ -125,7 +101,6 @@ const handleResumeUpload = async (
         {/* RIGHT column — floating mock UI */}
         
           <div className="hero-right">
-            
   <div className="hero-dots"></div>
   
 
@@ -164,7 +139,6 @@ const handleResumeUpload = async (
   </div>
 </div>
 </div>
-
           {/* Floating score badge */}
       
 
