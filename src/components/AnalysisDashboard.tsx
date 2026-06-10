@@ -1,5 +1,8 @@
   "use client";
   import { useEffect, useState } from "react";
+  import { useRouter } from "next/navigation";
+
+
   import { getResumeData } from "../lib/storage";
   import { analyzeResume } from "../lib/analyzer";
   import { analyzeResumeIntelligence } from "../lib/resumeIntelligence";
@@ -10,7 +13,7 @@
 
   export default function AnalysisDashboard() {
     const [data, setData] = useState<any>(null);
-
+const router = useRouter();
     useEffect(() => {
       setData(getResumeData());
     }, []);
@@ -159,6 +162,7 @@ ats.overallScore + 15,
 </div>
 
 <button
+onClick={() => router.push("/builder")}
 className="
 mt-8
 bg-white
@@ -197,6 +201,7 @@ text-slate-700
   </div>
 
   {/* RIGHT PANEL */}
+ 
 
   <div className="flex-1 space-y-6">
   <div className="
@@ -357,7 +362,26 @@ max-w-3xl
   </div>
 
   </div>
+<div className="
+bg-green-50
+rounded-3xl
+border
+border-green-200
+p-8
+">
 
+<p className="text-green-700 text-sm">
+Predicted ATS Score
+</p>
+
+<h2 className="text-6xl font-bold mt-2 text-green-700">
+{Math.min(
+ats.overallScore + 15,
+100
+)}
+</h2>
+
+</div>
         
 
        <div className="grid md:grid-cols-3 gap-4">
