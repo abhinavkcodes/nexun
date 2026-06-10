@@ -38,7 +38,13 @@ const handleResumeUpload = async (
       return;
     }
 
-    localStorage.setItem("analysisData", JSON.stringify(result.analysisData));
+    localStorage.setItem(
+  "analysisData",
+  JSON.stringify({
+    ...result.analysisData,
+    resumeText: result.resumeText,
+  })
+);
 
     router.push("/analysis");
 

@@ -36,21 +36,27 @@ function getResumeStrength(
 }
 
 // ── Section health rows for the dashboard ───────────────────────────────────
-function buildSectionRows(sectionAnalysis: ReturnType<typeof analyzeSections>) {
+function buildSectionRows(
+  sectionAnalysis: ReturnType<typeof analyzeSections>
+) {
   return [
-    { name: "Skills",          ...sectionAnalysis.skills },
-    { name: "Experience",      ...sectionAnalysis.experience },
-    { name: "Projects",        ...sectionAnalysis.projects },
-    { name: "Education",       ...sectionAnalysis.education },
-    { name: "Certifications",  ...sectionAnalysis.certifications },
-    { name: "Achievements",    ...sectionAnalysis.achievements },
-  ].map(({ name, score, found }) => ({
+    { name: "Skills", ...sectionAnalysis.skills },
+    { name: "Experience", ...sectionAnalysis.experience },
+    { name: "Projects", ...sectionAnalysis.projects },
+    { name: "Education", ...sectionAnalysis.education },
+    { name: "Certifications", ...sectionAnalysis.certifications },
+    { name: "Achievements", ...sectionAnalysis.achievements },
+  ].map(({ name, score, found, issues }) => ({
     name,
     score,
+    issues,
+
     status: (
-      !found         ? "missing"  :
-      score >= 70    ? "good"     :
-                       "warning"
+      !found
+        ? "missing"
+        : score >= 70
+        ? "good"
+        : "warning"
     ) as "good" | "warning" | "missing",
   }));
 }
@@ -84,6 +90,43 @@ export async function POST(req: NextRequest) {
     const intelligence = analyzeResumeIntelligence(resumeText);
     const atsResult    = analyzeATS(resumeText, roleAnalysis, intelligence);
     const sectionAnalysis = analyzeSections(resumeText);
+    const resumeLines = generateResumePreview(resumeText);
+
+const atsChecklist = [
+  {
+    label: "Email address",
+    ok: /\S+@\S+\.\S+/.test(resumeText),
+  },
+  {
+    label: "Phone number",
+    ok: /(\+?\d[\d\s\-()]{8,})/.test(resumeText),
+  },
+  {
+    label: "LinkedIn URL",
+    ok: resumeText.toLowerCase().includes("linkedin"),
+  },
+  {
+    label: "GitHub profile",
+    ok: resumeText.toLowerCase().includes("github"),
+  },
+  {
+    label: "Skills section",
+    ok: sectionAnalysis.skills.found,
+  },
+  {
+    label: "Experience section",
+    ok: sectionAnalysis.experience.found,
+  },
+  {
+    label: "Education section",
+    ok: sectionAnalysis.education.found,
+  },
+  {
+    label: "Certifications",
+    ok: sectionAnalysis.certifications.found,
+  },
+];
+
 
     // ── Build keyword coverage ───────────────────────────────────────────────
     const resumeLower = resumeText.toLowerCase();
@@ -94,7 +137,10 @@ export async function POST(req: NextRequest) {
 
     // ── Assemble the final AnalysisData shape ────────────────────────────────
   const analysisData = {
+    
   fileName: file.name,
+  resumeLines,
+  atsChecklist,
 
   overallScore: atsResult.overallScore,
   atsScore: atsResult.atsCompliance.score,
@@ -102,11 +148,16 @@ export async function POST(req: NextRequest) {
   experienceScore: atsResult.experienceScore,
   projectScore: atsResult.projectScore,
 
-  skillMatch: atsResult.roleMatchScore,
+roleMatchScore: atsResult.roleMatchScore,
 
   keywordScore: atsResult.keywordDensityScore,
 
   readabilityScore: intelligence.readabilityScore,
+  readingGradeLevel:
+  intelligence.readingGradeLevel,
+
+resumeLengthStatus:
+  intelligence.resumeLengthStatus,
 
   wordCount: intelligence.wordCount,
   pageCount: intelligence.pageCount,
@@ -140,7 +191,15 @@ export async function POST(req: NextRequest) {
 
   sections: buildSectionRows(sectionAnalysis),
 };
+console.log(
+  JSON.stringify(
+    analysisData,
+    null,
+    2
+  )
+);
     return NextResponse.json({
+      
       success: true,
       fileName:     file.name,
       fileSize:     file.size,

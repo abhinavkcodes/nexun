@@ -80,12 +80,47 @@ export function analyzeResumeIntelligence(resumeText: string) {
   if (structureScore >= 70)      readabilityScore += 10; // well organised
   if (resumeText.length > 1500)  readabilityScore += 5;
   readabilityScore = Math.min(readabilityScore, 100);
+  // ── Reading grade level ──────────────────────────────────
 
-  // ── Page / word count ───────────────────────────────────────────────────────
+const totalWords =
+  resumeText.split(/\s+/).filter(Boolean).length;
+
+const totalSentences =
+  Math.max(
+    sentences.length,
+    1
+  );
+
+const syllables = resumeText
+  .toLowerCase()
+  .split(/\s+/)
+  .reduce((count, word) => {
+    const matches =
+      word.match(/[aeiouy]{1,2}/g);
+
+    return count + Math.max(1, matches?.length || 1);
+  }, 0);
+
+const readingGradeLevel =
+  0.39 * (totalWords / totalSentences) +
+  11.8 * (syllables / totalWords) -
+  15.59;
+
   const wordCount = resumeText.split(/\s+/).filter(Boolean).length;
-  // Heuristic: ~500 words per page for a resume
-  const pageCount = Math.max(1, Math.round(wordCount / 500));
 
+// Heuristic: ~500 words/page
+const pageCount = Math.max(
+  1,
+  Math.ceil(wordCount / 500)
+);
+
+let resumeLengthStatus: "good" | "warning" | "long" = "good";
+
+if (pageCount > 2) {
+  resumeLengthStatus = "long";
+} else if (pageCount === 2) {
+  resumeLengthStatus = "warning";
+}
   // ── Overall quality ─────────────────────────────────────────────────────────
   const resumeQualityScore = Math.round(
     structureScore    * 0.25 +
@@ -101,15 +136,33 @@ return {
   projectScore,
   metricsScore,
   achievementScore,
+
   keywordDensityScore,
+
   resumeQualityScore,
+
   readabilityScore,
+
+  readingGradeLevel,
+
   wordCount,
+
   pageCount,
+
+  resumeLengthStatus,
+
   metricsFound: uniqueMetrics.length,
-  experienceStrengths: experienceAnalysis.strengths,
-  experienceWeaknesses: experienceAnalysis.weaknesses,
-  projectStrengths: projectAnalysis.strengths,
-  projectWeaknesses: projectAnalysis.weaknesses,
+
+  experienceStrengths:
+    experienceAnalysis.strengths,
+
+  experienceWeaknesses:
+    experienceAnalysis.weaknesses,
+
+  projectStrengths:
+    projectAnalysis.strengths,
+
+  projectWeaknesses:
+    projectAnalysis.weaknesses,
 };
 }

@@ -252,6 +252,23 @@ function TabBtn({
   type: string;
   text: string;
 };
+type KeywordItem = {
+  word: string;
+  found: boolean;
+};
+
+type SectionItem = {
+  name: string;
+  status: "good" | "warning" | "missing";
+  issues?: string[];
+  score?: number;
+};
+
+type ATSChecklistItem = {
+  label: string;
+  ok: boolean;
+  description?: string;
+};
 
 // ── Mini resume preview ───────────────────────────────────────────────────────
 function ResumePreview({
@@ -334,13 +351,41 @@ export default function NexunDashboard({
   analysisData,
 }: AnalysisDashboardProps) {
   const [tab, setTab] = useState("overview");
- const d = analysisData ?? MOCK_DATA;
  const safeData = {
-  ...MOCK_DATA,
-  ...d,
+  matchedSkills: [],
+  skillGaps: [],
+  suggestions: [],
+  redFlags: [],
+  keywords: [],
+  sections: [],
+  atsChecklist: [],
+  experienceStrengths: [],
+  experienceWeaknesses: [],
+  projectStrengths: [],
+  projectWeaknesses: [],
+  ...analysisData,
 };
 console.log("REAL ANALYSIS:", analysisData);
-  const kwFound = safeData.keywords.filter(k => k.found).length;
+console.log("MATCHED SKILLS:", safeData.matchedSkills);
+console.log("RED FLAGS:", safeData.redFlags);
+console.log("SECTIONS:", safeData.sections);
+console.log("KEYWORDS:", safeData.keywords);
+console.log("ATS CHECKLIST:", safeData.atsChecklist);
+console.log("REAL ANALYSIS:", analysisData);
+
+// ── Already have ──
+console.log("MATCHED SKILLS:", safeData.matchedSkills);
+console.log("RED FLAGS:", safeData.redFlags);
+console.log("SECTIONS:", safeData.sections);
+console.log("KEYWORDS:", safeData.keywords);
+console.log("ATS CHECKLIST:", safeData.atsChecklist);
+
+
+
+
+ const kwFound = safeData.keywords.filter(
+  (k: KeywordItem) => k.found
+).length;
 
   const TABS = [
     { id: "overview",     label: "Overview" },
@@ -370,15 +415,7 @@ console.log("REAL ANALYSIS:", analysisData);
             <span style={{ width: 1, height: 18, background: "#E5E5E3" }} />
             <span style={{ fontSize: 12, color: "#888", fontWeight: 500 }}>Resume Analysis</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 11px", background: "#F7F7F6", borderRadius: 7, border: "1px solid #E5E5E3" }}>
-              <span style={{ fontSize: 12 }}>📄</span>
-              <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>{safeData.fileName}</span>
-            </div>
-            <button style={{ padding: "7px 16px", background: "#111", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-              ✨ Build ATS Resume
-            </button>
-          </div>
+          
         </div>
       </header>
 
@@ -411,22 +448,139 @@ console.log("REAL ANALYSIS:", analysisData);
               </p>
 
               {/* 3 signal bars — no number, just qualitative */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                {[
-                  { label: "Experience", value: safeData.experienceScore, icon: "💼", color: scoreColor(safeData.experienceScore) },
-                  { label: "Projects", value: safeData.projectScore, icon: "🛠", color: scoreColor(safeData.projectScore) },
-                  { label: "Keywords", value: safeData.keywordScore, icon: "🔍", color: scoreColor(safeData.keywordScore) },
-                ].map(({ label, value, icon, color }) => (
-                  <div key={label} style={{ background: "#F7F7F6", borderRadius: 10, padding: "12px 13px", border: "1px solid #EBEBEA" }}>
-                    <span style={{ fontSize: 14, display: "block", marginBottom: 6 }}>{icon}</span>
-                    <span style={{ fontSize: 11, color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", display: "block", marginBottom: 7 }}>{label}</span>
-                    <Bar value={value} color={color} delay={300} h={4} />
-                    <span style={{ fontSize: 11, color, fontWeight: 600, marginTop: 5, display: "block" }}>
-                      {value >= 80 ? "Strong" : value >= 60 ? "Fair" : "Weak"}
-                    </span>
-                  </div>
-                ))}
-              </div>
+             <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+  }}
+>
+  {/* Resume Length */}
+  <div
+    style={{
+      background: "#F7F7F6",
+      borderRadius: 10,
+      padding: "12px 13px",
+      border: "1px solid #EBEBEA",
+    }}
+  >
+    <span style={{ fontSize: 18, display: "block", marginBottom: 6 }}>
+      📄
+    </span>
+
+    <span
+      style={{
+        fontSize: 11,
+        color: "#888",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.07em",
+        display: "block",
+        marginBottom: 8,
+      }}
+    >
+      Resume Length
+    </span>
+
+    <div
+      style={{
+        fontSize: 22,
+        fontWeight: 700,
+        color: "#111",
+      }}
+    >
+      {safeData.pageCount}
+    </div>
+
+    <div
+      style={{
+        fontSize: 12,
+        color: "#666",
+        marginTop: 4,
+      }}
+    >
+      {safeData.wordCount} words
+    </div>
+
+    <span
+      style={{
+        fontSize: 11,
+        color: "#15803d",
+        fontWeight: 600,
+        marginTop: 8,
+        display: "block",
+      }}
+    >
+      ✓ Ideal length
+    </span>
+  </div>
+
+  {/* Readability */}
+ {/* Parse Success */}
+<div
+  style={{
+    background: "#F7F7F6",
+    borderRadius: 10,
+    padding: "12px 13px",
+    border: "1px solid #EBEBEA",
+  }}
+>
+  <span style={{ fontSize: 18, display: "block", marginBottom: 6 }}>
+    📑
+  </span>
+
+  <span
+    style={{
+      fontSize: 11,
+      color: "#888",
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.07em",
+      display: "block",
+      marginBottom: 8,
+    }}
+  >
+    Parse Success
+  </span>
+
+  <div
+    style={{
+      fontSize: 22,
+      fontWeight: 700,
+      color: "#111",
+    }}
+  >
+    {safeData.parseSuccess ?? 96}%
+  </div>
+
+  <div
+    style={{
+      fontSize: 12,
+      color: "#666",
+      marginTop: 4,
+    }}
+  >
+    ATS-readable resume
+  </div>
+
+  <span
+    style={{
+      fontSize: 11,
+      color:
+        (safeData.parseSuccess ?? 96) >= 90
+          ? "#15803d"
+          : "#d97706",
+      fontWeight: 600,
+      marginTop: 8,
+      display: "block",
+    }}
+  >
+    {(safeData.parseSuccess ?? 96) >= 90
+      ? "✓ Successfully parsed"
+      : "⚠ Some sections may not be detected"}
+  </span>
+</div>
+</div>
             </div>
           </div>
 
@@ -445,38 +599,114 @@ console.log("REAL ANALYSIS:", analysisData);
                   <div>
                     <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 14 }}>Section Health</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      {safeData.sections.map((s, i) => {
-                        const sc =
-  STATUS[s.status as keyof typeof STATUS];
-                        return (
-                          <div key={s.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 0", borderBottom: i < safeData.sections.length - 1 ? "1px solid #F0F0EE" : "none" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                              <span style={{ width: 7, height: 7, borderRadius: "50%", background: sc.dot, flexShrink: 0 }} />
-                              <span style={{ fontSize: 13, fontWeight: 500, color: "#333" }}>{s.name}</span>
-                            </div>
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 5, color: sc.color, background: sc.bg, border: `1px solid ${sc.border}` }}>
-                              {sc.label}
-                            </span>
-                          </div>
-                        );
-                      })}
+                     {safeData.sections.map(
+  (
+    s: SectionItem,
+    i: number
+  ) => {
+    const sc =
+      STATUS[s.status];
+
+    return (
+      <div
+        key={s.name}
+        style={{
+          padding: "12px 0",
+          borderBottom:
+            i < safeData.sections.length - 1
+              ? "1px solid #F0F0EE"
+              : "none",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+           marginBottom:
+  (s.issues?.length ?? 0) > 0
+    ? 8
+    : 0,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 9,
+            }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: sc.dot,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {s.name}
+            </span>
+          </div>
+
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "3px 9px",
+              borderRadius: 5,
+              color: sc.color,
+              background: sc.bg,
+              border: `1px solid ${sc.border}`,
+            }}
+          >
+            {sc.label}
+          </span>
+        </div>
+
+       {(s.issues?.length ?? 0) > 0 && (
+          <div
+            style={{
+              paddingLeft: 16,
+            }}
+          >
+           {(s.issues ?? []).map(
+              (
+                issue,
+                idx
+              ) => (
+                <div
+                  key={idx}
+                  style={{
+                    fontSize: 11,
+                    color: "#777",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  • {issue}
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+)}
                     </div>
                   </div>
 
                   {/* ATS compliance checklist */}
                   <div>
-                    <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 14 }}>ATS Checklist</p>
+                    <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 14 }}>MUST HAVE</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                      {[
-                        { label: "Email address", ok: true },
-                        { label: "Phone number", ok: true },
-                        { label: "LinkedIn URL", ok: false },
-                        { label: "GitHub profile", ok: true },
-                        { label: "Skills section", ok: true },
-                        { label: "Experience section", ok: true },
-                        { label: "Education section", ok: true },
-                        { label: "Certifications", ok: false },
-                      ].map(({ label, ok }) => (
+                      {safeData.atsChecklist?.map(
+  ({ label, ok }: ATSChecklistItem) => (
                         <div key={label} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", borderRadius: 8, background: ok ? "#F0FDF4" : "#FEF2F2", border: `1px solid ${ok ? "#BBF7D0" : "#FECACA"}` }}>
                           <span style={{ fontSize: 11, color: ok ? "#16a34a" : "#dc2626", fontWeight: 700 }}>{ok ? "✓" : "✕"}</span>
                           <span style={{ fontSize: 12, color: ok ? "#15803d" : "#b91c1c", fontWeight: 500 }}>{label}</span>
@@ -487,6 +717,7 @@ console.log("REAL ANALYSIS:", analysisData);
                 </div>
               )}
 
+
               {/* ── SKILLS ── */}
               {tab === "skills" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
@@ -495,7 +726,7 @@ console.log("REAL ANALYSIS:", analysisData);
                       Matched Skills <span style={{ color: "#16a34a" }}>({safeData.matchedSkills.length})</span>
                     </p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                      {safeData.matchedSkills.map(s => (
+                      {safeData.matchedSkills.map((s: string) => (
                         <span key={s} style={{ padding: "5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 500, background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#15803d" }}>✓ {s}</span>
                       ))}
                     </div>
@@ -505,7 +736,8 @@ console.log("REAL ANALYSIS:", analysisData);
                       Missing Skills <span style={{ color: "#dc2626" }}>({safeData.skillGaps.length})</span>
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {safeData.skillGaps.map((gap, i) => {
+                      {safeData.skillGaps.map(
+  (gap: string, i: number) => {
                         const conf = [
                           { color: "#dc2626", bg: "#FEF2F2", border: "#FECACA", label: "High priority" },
                           { color: "#d97706", bg: "#FFFBEB", border: "#FDE68A", label: "Medium" },
@@ -533,7 +765,8 @@ console.log("REAL ANALYSIS:", analysisData);
                   </div>
                   <Bar value={(kwFound / safeData.keywords.length) * 100} color="#2563eb" delay={150} h={5} />
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 18 }}>
-                    {safeData.keywords.map(k => <KwChip key={k.word} {...k} />)}
+                    {safeData.keywords.map(
+  (k: KeywordItem) => <KwChip key={k.word} {...k} />)}
                   </div>
                   <p style={{ fontSize: 11, color: "#CCC", marginTop: 14 }}>
                     <span style={{ color: "#15803d", fontWeight: 600 }}>● Found</span> — present in resume.&nbsp;&nbsp;
@@ -546,7 +779,8 @@ console.log("REAL ANALYSIS:", analysisData);
               {tab === "suggestions" && (
                 <div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
-                    {safeData.suggestions.map((s, i) => {
+                    {safeData.suggestions.map(
+  (s: string, i: number) => {
                       const p = i < 2
                         ? { color: "#dc2626", bg: "#FEF2F2", border: "#FECACA", numBg: "#dc2626", label: "High" }
                         : i < 4
@@ -564,15 +798,7 @@ console.log("REAL ANALYSIS:", analysisData);
                     })}
                   </div>
                   {/* CTA strip */}
-                  <div style={{ padding: "22px 24px", background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-                    <div>
-                      <p style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 4, fontFamily: "'Instrument Serif', serif" }}>Fix all issues automatically</p>
-                      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>Our builder applies every suggestion and exports a clean, recruiter-ready PDF.</p>
-                    </div>
-                    <button style={{ padding: "10px 20px", background: "#fff", color: "#1e1b4b", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                      ✨ Build ATS Resume
-                    </button>
-                  </div>
+                 
                 </div>
               )}
 
@@ -580,15 +806,7 @@ console.log("REAL ANALYSIS:", analysisData);
           </div>
 
           {/* ── Bottom CTA ── */}
-          <div style={{ padding: "20px 24px", background: "#fff", border: "1px solid #E5E5E3", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-            <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "#111", marginBottom: 3 }}>Build an ATS-optimized resume</p>
-              <p style={{ fontSize: 12, color: "#888" }}>Auto-apply all suggestions and download a recruiter-ready PDF in minutes.</p>
-            </div>
-            <button style={{ padding: "10px 20px", background: "#111", color: "#fff", border: "none", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-              ✨ Build Resume →
-            </button>
-          </div>
+         
 
         </div>
 
@@ -603,7 +821,8 @@ console.log("REAL ANALYSIS:", analysisData);
             <div style={{ background: "#fff", border: "1px solid #FECACA", borderRadius: 12, padding: "16px 18px" }}>
               <p style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>⚠ Red Flags</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                {safeData.redFlags.map((f, i) => (
+                {safeData.redFlags.map(
+  (f: string, i: number) => (
                   <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 10px", background: "#FEF2F2", borderRadius: 7 }}>
                     <span style={{ color: "#dc2626", fontSize: 10, marginTop: 1 }}>✕</span>
                     <span style={{ fontSize: 12, color: "#991b1b", fontWeight: 500, lineHeight: 1.4 }}>{f}</span>
@@ -614,19 +833,119 @@ console.log("REAL ANALYSIS:", analysisData);
           )}
 
           {/* Strengths */}
-          <div style={{ background: "#fff", border: "1px solid #BBF7D0", borderRadius: 12, padding: "16px 18px" }}>
-            <p style={{ fontSize: 10, color: "#16a34a", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>✓ Strengths</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[...safeData.experienceStrengths, ...safeData.projectStrengths].map((s, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <span style={{ color: "#16a34a", fontSize: 10, marginTop: 2 }}>●</span>
-                  <span style={{ fontSize: 12, color: "#166534", lineHeight: 1.5 }}>{s}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+         {/* Strengths */}
+<div
+  style={{
+    background: "#fff",
+    border: "1px solid #BBF7D0",
+    borderRadius: 12,
+    padding: "16px 18px",
+  }}
+>
+  <p
+    style={{
+      fontSize: 10,
+      color: "#16a34a",
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.09em",
+      marginBottom: 10,
+    }}
+  >
+    ✓ Strengths
+  </p>
 
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+    }}
+  >
+    {[...safeData.experienceStrengths, ...safeData.projectStrengths].map(
+      (s, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "flex-start",
+          }}
+        >
+          <span
+            style={{
+              color: "#16a34a",
+              fontSize: 10,
+              marginTop: 2,
+            }}
+          >
+            ●
+          </span>
+
+          <span
+            style={{
+              fontSize: 12,
+              color: "#166534",
+              lineHeight: 1.5,
+            }}
+          >
+            {s}
+          </span>
         </div>
+      )
+    )}
+  </div>
+</div>
+
+{/* PASTE CTA HERE */}
+<div
+  style={{
+    padding: "16px",
+    background: "#fff",
+    border: "1px solid #E5E5E3",
+    borderRadius: 12,
+  }}
+>
+  <p
+    style={{
+      fontSize: 14,
+      fontWeight: 700,
+      color: "#111",
+      marginBottom: 4,
+    }}
+  >
+    Build an ATS-optimized resume
+  </p>
+
+  <p
+    style={{
+      fontSize: 12,
+      color: "#888",
+      marginBottom: 12,
+      lineHeight: 1.5,
+    }}
+  >
+    Auto-apply all suggestions and generate a recruiter-ready resume.
+  </p>
+
+  <button
+    style={{
+      width: "100%",
+      padding: "10px",
+      background: "#111",
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: "pointer",
+    }}
+  >
+    ✨ Build Resume →
+  </button>
+</div>
+
+</div> {/* RIGHT COLUMN */}
       </div>
     </div>
   );
