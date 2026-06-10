@@ -416,8 +416,20 @@ ATS Score
   </p>
 
   <h2 className="text-5xl font-bold mt-3">
-    {intelligence.resumeQualityScore}
-  </h2>
+{intelligence.resumeQualityScore}
+</h2>
+
+<p className="mt-3 text-sm text-gray-500">
+Structure: {intelligence.structureScore}
+</p>
+
+<p className="text-sm text-gray-500">
+Projects: {intelligence.projectScore}
+</p>
+
+<p className="text-sm text-gray-500">
+Experience: {intelligence.experienceScore}
+</p>
 
 </div>
   <div className="bg-white rounded-3xl border p-6">
@@ -446,19 +458,20 @@ ATS Compliance
 <div className="grid md:grid-cols-4 gap-4">
 
 <div className="p-4 rounded-2xl bg-slate-50">
-Email {ats.atsCompliance.checks.email ? "✅" : "❌"}
+Email {ats.atsCompliance?.checks?.email ? "✅" : "❌"}
 </div>
 
 <div className="p-4 rounded-2xl bg-slate-50">
-Phone {ats.atsCompliance.checks.phone ? "✅" : "❌"}
+Phone {ats.atsCompliance?.checks?.phone
+ ? "✅" : "❌"}
 </div>
 
 <div className="p-4 rounded-2xl bg-slate-50">
-LinkedIn {ats.atsCompliance.checks.linkedin ? "✅" : "❌"}
+LinkedIn {ats.atsCompliance?.checks?.linkedin ? "✅" : "❌"}
 </div>
 
 <div className="p-4 rounded-2xl bg-slate-50">
-GitHub {ats.atsCompliance.checks.github ? "✅" : "❌"}
+GitHub {ats.atsCompliance?.checks?.github ? "✅" : "❌"}
 </div>
 
 </div>
@@ -480,10 +493,7 @@ mb-6
 Section Analysis
 </h2>
 <div className="
-bg-white
-rounded-3xl
-border
-border-slate-200
+
 p-8
 ">
 
