@@ -883,3 +883,23 @@ width: 72px;
   opacity: 0.8;
   cursor: not-allowed;
 }
+.hero-features{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:4px;
+}
+
+.hero-features span{
+  padding:8px 14px;
+  border-radius:999px;
+
+  background:white;
+
+  border:1px solid rgba(0,0,0,.08);
+
+  font-size:13px;
+  font-weight:500;
+
+  color:#444;
+}

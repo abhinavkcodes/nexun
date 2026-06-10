@@ -4,269 +4,131 @@ export interface RoleDetectionResult {
   matchedKeywords: string[];
 }
 
-const roleDatabase: Record<
-  string,
-  string[]
-> = {
+// ── Role keyword database ─────────────────────────────────────────────────────
+const roleDatabase: Record<string, string[]> = {
   "frontend developer": [
-    "react",
-    "next.js",
-    "tailwind",
-    "css",
-    "html",
-    "redux",
-    "frontend",
-    "javascript",
-    "typescript",
+    "react", "next.js", "tailwind", "css", "html", "redux",
+    "frontend", "javascript", "typescript", "vue", "angular", "svelte",
   ],
-
   "backend developer": [
-    "node.js",
-    "express",
-    "spring boot",
-    "django",
-    "flask",
-    "postgresql",
-    "mongodb",
-    "mysql",
-    "rest api",
-    "backend",
+    "node.js", "express", "spring boot", "django", "flask",
+    "postgresql", "mongodb", "mysql", "rest api", "backend",
+    "fastapi", "graphql", "prisma",
   ],
-
   "full stack developer": [
-    "react",
-    "next.js",
-    "node.js",
-    "express",
-    "mongodb",
-    "postgresql",
-    "full-stack",
-    "api",
+    "react", "next.js", "node.js", "express", "mongodb",
+    "postgresql", "full-stack", "fullstack", "api", "full stack",
   ],
-
   "software engineer": [
-    "java",
-    "python",
-    "javascript",
-    "sql",
-    "git",
-    "algorithms",
-    "data structures",
-    "oop",
+    "java", "python", "javascript", "sql", "git",
+    "algorithms", "data structures", "oop", "system design",
   ],
-
   "data analyst": [
-    "excel",
-    "power bi",
-    "tableau",
-    "sql",
-    "analytics",
-    "dashboard",
-    "data analysis",
-    "pandas",
+    "excel", "power bi", "tableau", "sql", "analytics",
+    "dashboard", "data analysis", "pandas", "looker", "metabase",
   ],
-
   "data scientist": [
-    "machine learning",
-    "pandas",
-    "numpy",
-    "tensorflow",
-    "pytorch",
-    "scikit-learn",
-    "statistics",
+    "machine learning", "pandas", "numpy", "tensorflow", "pytorch",
+    "scikit-learn", "statistics", "jupyter", "feature engineering",
   ],
-
   "machine learning engineer": [
-    "tensorflow",
-    "pytorch",
-    "mlops",
-    "model deployment",
-    "machine learning",
-    "feature engineering",
+    "tensorflow", "pytorch", "mlops", "model deployment",
+    "machine learning", "feature engineering", "kubeflow", "mlflow",
   ],
-
   "ai engineer": [
-    "llm",
-    "langchain",
-    "rag",
-    "vector database",
-    "openai",
-    "prompt engineering",
-    "embedding",
-    "ai",
+    "llm", "langchain", "rag", "vector database", "openai",
+    "prompt engineering", "embedding", "ai", "fine-tuning",
+    "hugging face", "transformers",
   ],
-
   "devops engineer": [
-    "docker",
-    "kubernetes",
-    "jenkins",
-    "github actions",
-    "terraform",
-    "ci/cd",
+    "docker", "kubernetes", "jenkins", "github actions",
+    "terraform", "ci/cd", "ansible", "linux", "bash",
   ],
-
   "cloud engineer": [
-    "aws",
-    "azure",
-    "gcp",
-    "cloud",
-    "lambda",
-    "ec2",
-    "s3",
+    "aws", "azure", "gcp", "cloud", "lambda",
+    "ec2", "s3", "serverless", "iam",
   ],
-
   "cybersecurity analyst": [
-    "penetration testing",
-    "owasp",
-    "burp suite",
-    "nmap",
-    "security",
-    "vulnerability",
+    "penetration testing", "owasp", "burp suite",
+    "nmap", "security", "vulnerability", "ethical hacking", "soc",
   ],
-
   "qa engineer": [
-    "selenium",
-    "cypress",
-    "playwright",
-    "testing",
-    "automation testing",
-    "qa",
+    "selenium", "cypress", "playwright", "testing",
+    "automation testing", "qa", "jest", "unit testing",
   ],
-
   "mobile app developer": [
-    "flutter",
-    "react native",
-    "android",
-    "ios",
-    "kotlin",
-    "swift",
+    "flutter", "react native", "android", "ios",
+    "kotlin", "swift", "firebase", "dart",
   ],
-
   "product manager": [
-    "roadmap",
-    "stakeholder",
-    "product strategy",
-    "user research",
-    "product management",
+    "roadmap", "stakeholder", "product strategy",
+    "user research", "product management", "agile", "scrum", "jira",
   ],
-
   "business analyst": [
-    "business analysis",
-    "requirements",
-    "stakeholder",
-    "process improvement",
-    "documentation",
+    "business analysis", "requirements", "stakeholder",
+    "process improvement", "documentation", "bpmn", "erp",
   ],
 };
 
-export function detectRole(
-  resumeText: string
-): RoleDetectionResult {
-  const text =
-    resumeText.toLowerCase();
+// ── Per-role bonus weights for high-signal keywords ───────────────────────────
+// These are additive to the base keyword count score.
+const roleBoosts: Record<string, Record<string, number>> = {
+  "frontend developer": {
+    react: 2, "next.js": 2, typescript: 1, tailwind: 1,
+  },
+  "full stack developer": {
+    react: 2, "node.js": 2, express: 1, postgresql: 1, mongodb: 1,
+  },
+  "backend developer": {
+    "node.js": 2, express: 2, postgresql: 1, mongodb: 1, django: 1,
+  },
+  "ai engineer": {
+    llm: 3, langchain: 2, rag: 2, openai: 2,
+  },
+  "data analyst": {
+    sql: 2, dashboard: 2, tableau: 2, "power bi": 2,
+  },
+  "data scientist": {
+    "machine learning": 2, pandas: 1, pytorch: 1, tensorflow: 1,
+  },
+  "devops engineer": {
+    docker: 2, kubernetes: 2, "github actions": 2, terraform: 1,
+  },
+};
 
-  let bestRole =
-    "software engineer";
+// ── Detect the most likely role from resume text ──────────────────────────────
+export function detectRole(resumeText: string): RoleDetectionResult {
+  const text = resumeText.toLowerCase();
 
+  let bestRole = "software engineer";
   let bestScore = 0;
+  let matchedKeywords: string[] = [];
 
-  let matchedKeywords: string[] =
-    [];
+  for (const [role, keywords] of Object.entries(roleDatabase)) {
+    const matches = keywords.filter((kw) => text.includes(kw));
+    let score = matches.length;
 
-  for (const [
-    role,
-    keywords,
-  ] of Object.entries(
-    roleDatabase
-  )) {
-   const matches =
-  keywords.filter(
-    keyword =>
-      text.includes(keyword)
-  );
-
-let score =
-  matches.length;
-
-// Core skill weighting
-if (
-  role === "frontend developer"
-) {
-  if (text.includes("react")) score += 2;
-  if (text.includes("next.js")) score += 2;
-  if (text.includes("typescript")) score += 1;
-}
-
-if (
-  role === "full stack developer"
-) {
-  if (text.includes("react")) score += 2;
-  if (text.includes("node.js")) score += 2;
-  if (text.includes("express")) score += 1;
-  if (text.includes("postgresql")) score += 1;
-  if (text.includes("mongodb")) score += 1;
-}
-
-if (
-  role === "ai engineer"
-) {
-  if (text.includes("llm")) score += 3;
-  if (text.includes("langchain")) score += 2;
-  if (text.includes("rag")) score += 2;
-}
-
-if (
-  role === "data analyst"
-) {
-  if (text.includes("sql")) score += 2;
-  if (text.includes("dashboard")) score += 2;
-  if (text.includes("excel")) score += 1;
-}
+    // Apply boost weights for high-signal keywords
+    const boosts = roleBoosts[role] ?? {};
+    for (const [kw, weight] of Object.entries(boosts)) {
+      if (text.includes(kw)) score += weight;
+    }
 
     if (score > bestScore) {
       bestScore = score;
       bestRole = role;
-      matchedKeywords =
-        matches;
+      matchedKeywords = matches;
     }
   }
 
-  let adjustedScore =
-  bestScore;
-
-if (
-  bestRole ===
-    "frontend developer" &&
-  (
-    text.includes("react") ||
-    text.includes("next.js")
-  )
-) {
-  adjustedScore += 2;
-}
-
-const confidence =
-  Math.min(
+  // Confidence = (adjusted score) / (keywords in that role + max possible boost)
+  // Cap at 100
+  const keywordCount = roleDatabase[bestRole]?.length ?? 1;
+  const maxBoost = Object.values(roleBoosts[bestRole] ?? {}).reduce((a, b) => a + b, 0);
+  const confidence = Math.min(
     100,
-    Math.round(
-      (
-        adjustedScore /
-        Math.max(
-          roleDatabase[
-            bestRole
-          ].length,
-          1
-        )
-      ) * 100
-    )
+    Math.round((bestScore / (keywordCount + maxBoost)) * 100)
   );
-  if (
-  text.includes("react") &&
-  text.includes("node.js")
-) {
-  bestRole =
-    "full stack developer";
-}
 
   return {
     role: bestRole,
