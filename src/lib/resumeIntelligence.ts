@@ -469,7 +469,18 @@ function calcAchievementScore(text: string): number {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Parse / ATS Readiness Score  (legacy-compatible)
+// Parse / ATS Readiness Score  — v2 (5-Pillar Model)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Modern ATS Parse Rate Model (2024-2025 best practices)
+// Sources: Jobscan, Resume Worded, Lever/Greenhouse parser research.
+//
+// PILLARS & MAX POINTS:
+//  1. Contact Completeness     20 pts  — ATS must find you to contact you
+//  2. Section Detectability    25 pts  — standard parseable headings
+//  3. Content Quality          20 pts  — bullets, metrics, section scores
+//  4. ATS Compatibility        20 pts  — no tables/columns/graphics signals
+//  5. Readability & Format     15 pts  — grade level + length + bullet density
 // ─────────────────────────────────────────────────────────────────────────────
 
 function calcParseScore(
@@ -486,39 +497,76 @@ function calcParseScore(
 
   let score = 0;
 
-  // Contact Information (20)
-  if (contact.email) score += 5;
-  if (contact.phone) score += 5;
-  if (contact.linkedin) score += 5;
-  if (contact.github) score += 5;
+  // ── PILLAR 1: Contact Completeness (20 pts) ───────────────────────────────
+  if (contact.email)     score += 7;  // critical — missing = ATS can't route
+  if (contact.phone)     score += 5;
+  if (contact.linkedin)  score += 4;
+  if (contact.github)    score += 2;
+  if (contact.portfolio) score += 2;
 
-  // Core Sections (40)
-  if (sections.skills.found) score += 8;
-  if (sections.experience.found) score += 12;
-  if (sections.projects.found) score += 8;
-  if (sections.education.found) score += 8;
-  if (sections.certifications.found) score += 2;
-  if (sections.achievements.found) score += 2;
+  // ── PILLAR 2: Section Detectability (25 pts) ─────────────────────────────
+  if (sections.experience.found)           score += 7;
+  if (sections.skills.found)               score += 5;
+  if (sections.education.found)            score += 5;
+  if (sections.projects.found)             score += 4;
+  if ((sections as any).professionalSummary?.found) score += 2;
+  if (sections.certifications.found)       score += 1;
+  if (sections.achievements.found)         score += 1;
 
-  // Resume Structure (15)
-  if (resumeLength.score >= 90) score += 5;
-  if (readability.score >= 75) score += 5;
-  if (readability.bulletCount >= 5) score += 5;
+  // ── PILLAR 3: Content Quality (20 pts) ───────────────────────────────────
+  // Quantified metrics — most important content signal
+  if (uniqueMetrics.length >= 5)      score += 8;
+  else if (uniqueMetrics.length >= 3) score += 6;
+  else if (uniqueMetrics.length >= 1) score += 3;
 
-  // ATS Readiness (15)
-  if (ats.score >= 80) score += 15;
-  else if (ats.score >= 60) score += 10;
+  // Average quality across key sections
+  const expQ  = sections.experience.found ? sections.experience.score  : 0;
+  const projQ = sections.projects.found   ? sections.projects.score    : 0;
+  const sklQ  = sections.skills.found     ? sections.skills.score      : 0;
+  const avgQ  = (expQ + projQ + sklQ) / 3;
+
+  if (avgQ >= 70)      score += 8;
+  else if (avgQ >= 50) score += 5;
+  else if (avgQ >= 30) score += 2;
+
+  // Well-rounded resume bonus (section count)
+  const sectionCount = [
+    sections.experience.found,
+    sections.skills.found,
+    sections.education.found,
+    sections.projects.found,
+    sections.certifications.found,
+    sections.achievements.found,
+    (sections as any).professionalSummary?.found,
+    (sections as any).leadership?.found,
+  ].filter(Boolean).length;
+
+  if (sectionCount >= 6)      score += 4;
+  else if (sectionCount >= 4) score += 2;
+
+  // ── PILLAR 4: ATS Compatibility (20 pts) ─────────────────────────────────
+  if (ats.score >= 85)      score += 20;
+  else if (ats.score >= 70) score += 15;
+  else if (ats.score >= 55) score += 10;
   else if (ats.score >= 40) score += 5;
+  if (ats.risk === "high")  score -= 5; // heavy penalty for table/image-heavy resumes
 
-  // Content Quality (10)
-  if (uniqueMetrics.length >= 5) score += 5;
-  else if (uniqueMetrics.length >= 2) score += 3;
-  else if (uniqueMetrics.length >= 1) score += 1;
+  // ── PILLAR 5: Readability & Format (15 pts) ──────────────────────────────
+  // Grade level (resume ideal: 10–14)
+  const grade = readability.gradeLevel;
+  if (grade >= 9 && grade <= 14)      score += 5;
+  else if (grade >= 7 && grade <= 16) score += 3;
 
-  if (experienceScore >= 60) score += 3;
-  if (projectScore >= 60) score += 2;
+  // Length appropriateness
+  if (resumeLength.status === "ideal")           score += 5;
+  else if (resumeLength.status === "acceptable") score += 3;
 
-  return Math.min(100, Math.round(score));
+  // Bullet density (structured content parses better)
+  if (readability.bulletCount >= 10)     score += 5;
+  else if (readability.bulletCount >= 5) score += 3;
+  else if (readability.bulletCount >= 2) score += 1;
+
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
 // ─────────────────────────────────────────────────────────────────────────────
 // Overall Weighted Score

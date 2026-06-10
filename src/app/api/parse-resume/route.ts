@@ -51,23 +51,22 @@ function buildSectionRows(
   sectionAnalysis: ReturnType<typeof analyzeSections>
 ) {
   return [
-    { name: "Skills", ...sectionAnalysis.skills },
-    { name: "Experience", ...sectionAnalysis.experience },
-    { name: "Projects", ...sectionAnalysis.projects },
-    { name: "Education", ...sectionAnalysis.education },
-    { name: "Certifications", ...sectionAnalysis.certifications },
-    { name: "Achievements", ...sectionAnalysis.achievements },
+    { name: "Professional Summary", ...sectionAnalysis.professionalSummary },
+    { name: "Skills",               ...sectionAnalysis.skills },
+    { name: "Experience",           ...sectionAnalysis.experience },
+    { name: "Projects",             ...sectionAnalysis.projects },
+    { name: "Education",            ...sectionAnalysis.education },
+    { name: "Certifications",       ...sectionAnalysis.certifications },
+    { name: "Achievements",         ...sectionAnalysis.achievements },
+    { name: "Leadership & Activities", ...sectionAnalysis.leadership },
   ].map(({ name, score, found, issues }) => ({
     name,
     score,
     issues,
-
     status: (
-      !found
-        ? "missing"
-        : score >= 70
-        ? "good"
-        : "warning"
+      !found   ? "missing" :
+      score >= 70 ? "good" :
+      "warning"
     ) as "good" | "warning" | "missing",
   }));
 }
@@ -104,16 +103,18 @@ export async function POST(req: NextRequest) {
     const resumeLines = generateResumePreview(resumeText);
 
 const atsChecklist = [
-  { label: "Email address",     ok: intelligence.contact.email },
-  { label: "Phone number",      ok: intelligence.contact.phone },
-  { label: "LinkedIn URL",      ok: intelligence.contact.linkedin },
-  { label: "GitHub profile",    ok: intelligence.contact.github },
-  { label: "Portfolio/Website", ok: intelligence.contact.portfolio },
-  { label: "Skills section",    ok: sectionAnalysis.skills.found },
-  { label: "Experience section",ok: sectionAnalysis.experience.found },
-  { label: "Education section", ok: sectionAnalysis.education.found },
-  { label: "Certifications",    ok: sectionAnalysis.certifications.found },
-  { label: "Achievements",      ok: sectionAnalysis.achievements.found },
+  { label: "Email address",            ok: intelligence.contact.email },
+  { label: "Phone number",             ok: intelligence.contact.phone },
+  { label: "LinkedIn URL",             ok: intelligence.contact.linkedin },
+  { label: "GitHub profile",           ok: intelligence.contact.github },
+  { label: "Portfolio/Website",        ok: intelligence.contact.portfolio },
+  { label: "Professional Summary",     ok: sectionAnalysis.professionalSummary.found },
+  { label: "Skills section",           ok: sectionAnalysis.skills.found },
+  { label: "Experience section",       ok: sectionAnalysis.experience.found },
+  { label: "Education section",        ok: sectionAnalysis.education.found },
+  { label: "Certifications",           ok: sectionAnalysis.certifications.found },
+  { label: "Achievements",             ok: sectionAnalysis.achievements.found },
+  { label: "Leadership & Activities",  ok: sectionAnalysis.leadership.found },
   // ATS risk flags surfaced as checklist items
   ...intelligence.ats.flags.slice(0, 3).map((flag) => ({
     label: flag.length > 60 ? flag.slice(0, 57) + "…" : flag,
