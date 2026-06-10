@@ -12,9 +12,10 @@ export type ATSRisk = "low" | "medium" | "high";
 
 export interface ResumeLengthAnalysis {
   pageCount: number;
+  wordCount: number;
   status: ResumeLengthStatus;
   message: string;
-  score: number; // 0–100
+  score: number;
 }
 
 export interface ATSAnalysis {
@@ -145,51 +146,79 @@ function inferExperienceLevel(text: string): ExperienceLevel {
  *
  * Words-per-page uses 450 (resume-standard dense layout, not 500).
  */
+
+
 function analyzeResumeLength(
   wordCount: number,
-  level: ExperienceLevel
+  experienceLevel: 'entry' | 'mid' | 'senior' | 'executive' = 'mid',
+  characterCount?: number
 ): ResumeLengthAnalysis {
-  const WORDS_PER_PAGE = 450;
-  const pageCount = Math.max(1, Math.round((wordCount / WORDS_PER_PAGE) * 10) / 10);
 
-  const ranges: Record<ExperienceLevel, { min: number; max: number }> = {
-    entry:     { min: 300,  max: 600  },
-    mid:       { min: 450,  max: 700  },
-    senior:    { min: 600,  max: 900  },
-    executive: { min: 800,  max: 1400 },
+  // Industry-standard words-per-page (resumes are dense, ~450-550 wpp)
+  const WORDS_PER_PAGE = 450;
+
+  // More accurate: use character count if available (avg 5.5 chars/word + spaces)
+  const effectiveWordCount = characterCount
+    ? Math.round(characterCount / 6.5)
+    : wordCount;
+
+  const rawPages = effectiveWordCount / WORDS_PER_PAGE;
+  const pageCount = Math.max(1, parseFloat(rawPages.toFixed(1)));
+
+  // Ideal ranges by experience level (industry standard)
+  const idealRanges: Record<typeof experienceLevel, { min: number; max: number; words: { min: number; max: number } }> = {
+    entry:     { min: 1,   max: 1,   words: { min: 300, max: 600 } },
+    mid:       { min: 1,   max: 1.5, words: { min: 400, max: 700 } },
+    senior:    { min: 1.5, max: 2,   words: { min: 600, max: 900 } },
+    executive: { min: 2,   max: 3,   words: { min: 800, max: 1400 } },
   };
 
-  const { min, max } = ranges[level];
+  const range = idealRanges[experienceLevel];
+  const wRange = range.words;
 
-  let status: ResumeLengthStatus;
+  let status: ResumeLengthAnalysis['status'];
   let message: string;
   let score: number;
 
-  if (wordCount < min * 0.65) {
-    status  = "too_short";
-    message = `Too brief for a ${level}-level resume. Add more accomplishments and detail.`;
-    score   = Math.max(15, Math.round((wordCount / min) * 55));
-  } else if (wordCount < min) {
-    status  = "acceptable";
-    message = `Slightly short. Expand bullet points with measurable outcomes.`;
-    score   = Math.round(60 + ((wordCount - min * 0.65) / (min * 0.35)) * 25);
-  } else if (wordCount <= max) {
-    status  = "ideal";
-    message = `Ideal length for a ${level}-level resume.`;
-    score   = 100;
-  } else if (wordCount <= max * 1.25) {
-    status  = "acceptable";
-    message = `Slightly long. Trim older roles or condense skills.`;
-    score   = Math.round(85 - ((wordCount - max) / (max * 0.25)) * 25);
+  if (effectiveWordCount < wRange.min * 0.6) {
+    // Severely short
+    status = 'too_short';
+    message = `Too brief — only ~${pageCount} page. Add more detail about your experience.`;
+    score = Math.max(20, Math.round((effectiveWordCount / wRange.min) * 60));
+
+  } else if (effectiveWordCount < wRange.min) {
+    // Slightly short but acceptable
+    status = 'acceptable';
+    message = `Slightly short. Consider expanding your accomplishments.`;
+    score = Math.round(60 + ((effectiveWordCount - wRange.min * 0.6) / (wRange.min * 0.4)) * 25);
+
+  } else if (effectiveWordCount <= wRange.max) {
+    // Ideal
+    status = 'ideal';
+    message = `Ideal length for a ${experienceLevel}-level resume.`;
+    score = 100;
+
+  } else if (effectiveWordCount <= wRange.max * 1.3) {
+    // Slightly over
+    status = 'acceptable';
+    message = `Slightly long. Try trimming older roles or redundant skills.`;
+    score = Math.round(85 - ((effectiveWordCount - wRange.max) / (wRange.max * 0.3)) * 25);
+
   } else {
-    status  = "too_long";
-    message = `Too long (~${pageCount} pages). Recruiters average 7 seconds — cut ruthlessly.`;
-    score   = Math.max(15, Math.round(60 - ((wordCount - max * 1.25) / max) * 45));
+    // Too long
+    status = 'too_long';
+    message = `Too long (~${pageCount} pages). Recruiters spend ~7 seconds — cut it down.`;
+    score = Math.max(20, Math.round(60 - ((effectiveWordCount - wRange.max * 1.3) / wRange.max) * 40));
   }
 
-  return { pageCount, status, message, score };
+return {
+  pageCount,
+  wordCount: effectiveWordCount,
+  status,
+  message,
+  score,
+};
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Readability
 // ─────────────────────────────────────────────────────────────────────────────
@@ -406,25 +435,21 @@ function analyzeContact(resumeText: string): ContactInfo {
 // Structure Score
 // ─────────────────────────────────────────────────────────────────────────────
 
-function calcStructureScore(sections: ReturnType<typeof analyzeSections>): number {
-  const weights: Record<string, number> = {
-    experience:     30,
-    projects:       20,
-    skills:         18,
-    education:      17,
-    achievements:   10,
-    certifications:  5,
-  };
-
+function calcStructureScore(
+  sections: ReturnType<typeof analyzeSections>
+): number {
   let score = 0;
-  for (const [key, weight] of Object.entries(weights)) {
-    if ((sections as Record<string, { found: boolean }>)[key]?.found) {
-      score += weight;
-    }
-  }
+
+  if (sections.experience.found) score += 30;
+  if (sections.projects.found) score += 20;
+  if (sections.skills.found) score += 18;
+  if (sections.education.found) score += 17;
+  if (sections.achievements.found) score += 10;
+  if (sections.certifications.found) score += 5;
 
   return Math.min(100, score);
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Achievement Score
@@ -458,39 +483,43 @@ function calcParseScore(
   projectScore: number,
   ats: ATSAnalysis
 ): number {
+
   let score = 0;
 
-  // Contact completeness (20 pts)
-  score += Math.round(contact.completenessScore * 0.2);
+  // Contact Information (20)
+  if (contact.email) score += 5;
+  if (contact.phone) score += 5;
+  if (contact.linkedin) score += 5;
+  if (contact.github) score += 5;
 
-  // Core sections (30 pts)
-  if (sections.skills.found)          score += 6;
-  if (sections.experience.found)      score += 10;
-  if (sections.projects.found)        score += 6;
-  if (sections.education.found)       score += 6;
-  if (sections.certifications.found)  score += 1;
-  if (sections.achievements.found)    score += 1;
+  // Core Sections (40)
+  if (sections.skills.found) score += 8;
+  if (sections.experience.found) score += 12;
+  if (sections.projects.found) score += 8;
+  if (sections.education.found) score += 8;
+  if (sections.certifications.found) score += 2;
+  if (sections.achievements.found) score += 2;
 
-  // Length quality (10 pts)
-  score += Math.round((resumeLength.score / 100) * 10);
+  // Resume Structure (15)
+  if (resumeLength.score >= 90) score += 5;
+  if (readability.score >= 75) score += 5;
+  if (readability.bulletCount >= 5) score += 5;
 
-  // Readability (10 pts)
-  score += Math.round((readability.score / 100) * 10);
+  // ATS Readiness (15)
+  if (ats.score >= 80) score += 15;
+  else if (ats.score >= 60) score += 10;
+  else if (ats.score >= 40) score += 5;
 
-  // ATS score (15 pts)
-  score += Math.round((ats.score / 100) * 15);
+  // Content Quality (10)
+  if (uniqueMetrics.length >= 5) score += 5;
+  else if (uniqueMetrics.length >= 2) score += 3;
+  else if (uniqueMetrics.length >= 1) score += 1;
 
-  // Content quality (15 pts)
-  if (uniqueMetrics.length >= 5) score += 8;
-  else if (uniqueMetrics.length >= 3) score += 5;
-  if (experienceScore >= 70) score += 4;
-  else if (experienceScore >= 50) score += 2;
-  if (projectScore >= 70) score += 3;
-  else if (projectScore >= 50) score += 2;
+  if (experienceScore >= 60) score += 3;
+  if (projectScore >= 60) score += 2;
 
   return Math.min(100, Math.round(score));
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Overall Weighted Score
 // ─────────────────────────────────────────────────────────────────────────────
@@ -554,8 +583,16 @@ export function analyzeResumeIntelligence(resumeText: string): ResumeIntelligenc
 const experienceLevel = inferExperienceLevel(resumeText);  // move this up, needed for metricsWeight
 
 // Weight tiers: entry resumes penalized less for low metrics
-const metricsWeight = experienceLevel === "entry" ? 7 : experienceLevel === "mid" ? 9 : 12;
-const weightedMetricSum = uniqueMetrics.reduce((sum, m) => sum + m.weight, 0);
+const metricsScore = Math.min(
+  100,
+  uniqueMetrics.length * (
+    experienceLevel === "entry"
+      ? 12
+      : experienceLevel === "mid"
+      ? 10
+      : 8
+  )
+);
   const resumeLength    = analyzeResumeLength(wordCount, experienceLevel);
   const readability     = analyzeReadability(resumeText);
 // Pass wordCount and resumeLength to the new signature
