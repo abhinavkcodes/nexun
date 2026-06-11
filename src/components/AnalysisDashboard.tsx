@@ -225,7 +225,13 @@ function ResumePreview({
         <span style={{ fontSize: 11, color: "#AAA", marginLeft: 4, fontWeight: 500 }}>Resume Preview</span>
       </div>
       {/* content */}
-      <div style={{ padding: "18px 16px", maxHeight: 420, overflowY: "auto" }}>
+      <div
+  style={{
+    padding: "18px 16px",
+    maxHeight: "65vh",
+    overflowY: "auto",
+  }}
+>
         {lines.map((line: ResumeLine, i: number) => {
           if (line.type === "name") return (
             <p key={i} style={{ fontSize: 15, fontWeight: 700, color: "#111", marginBottom: 2, letterSpacing: "-0.3px" }}>{line.text}</p>
@@ -324,9 +330,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 
   const TABS = [
     { id: "overview",     label: "Overview" },
-    { id: "skills",       label: "Skills" },
-    { id: "keywords",     label: "Keywords" },
-    { id: "suggestions",  label: "Action Plan" },
+    
   ];
 
   return (
@@ -341,23 +345,51 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
       `}</style>
 
       {/* ── NAV ── */}
-      <header style={{ background: "#fff", borderBottom: "1px solid #E5E5E3", position: "sticky", top: 0, zIndex: 50, height: 52 }}>
-        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 28px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.3px", display: "flex", alignItems: "center", gap: 7 }}>
-              <span>⬡</span> Nexun
-            </span>
-            <span style={{ width: 1, height: 18, background: "#E5E5E3" }} />
-            <span style={{ fontSize: 12, color: "#888", fontWeight: 500 }}>Resume Analysis</span>
-          </div>
-          
-        </div>
-      </header>
+      <header
+  style={{
+    background: "#fff",
+    borderBottom: "1px solid #E5E5E3",
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
+    height: 52,
+  }}
+>
+  <div
+    style={{
+      maxWidth: 1320,
+      margin: "0 auto",
+      padding: "0 28px",
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+    }}
+  >
+      <span
+        style={{
+          fontWeight: 700,
+          fontSize: 16,
+        }}
+      >
+        ⬡ Nexun
+      </span>
+  </div>
+</header>
 
-      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "24px 28px 60px", display: "grid", gridTemplateColumns: "1fr 300px", gap: 20 }}>
+      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "24px 28px 60px", display: "grid", gridTemplateColumns: "1fr 350px", gap: 20 }}>
 
         {/* ── LEFT COLUMN ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 16,
+
+    overflowY: "auto",
+    height: "100%",
+    paddingRight: 8,
+  }}
+>
 
           {/* ── HERO CARD: Big ATS Score + quick insights ── */}
           <div style={{ background: "#fff", border: "1px solid #E5E5E3", borderRadius: 16, padding: "28px 28px 24px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center" }}>
@@ -390,6 +422,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
     gap: 12,
   }}
 >
+  
   {/* Resume Length */}
   <div
     style={{
@@ -529,6 +562,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
               {/* ── OVERVIEW ── */}
               {tab === "overview" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+                  
 
                   {/* Section health */}
                   <div>
@@ -651,64 +685,169 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
                   </div>
                 </div>
               )}
+{/* Red flags */}
+
+          {safeData.redFlags.length > 0 && (
+
+            <div style={{ background: "#fff", border: "1px solid #FECACA", borderRadius: 12, padding: "16px 18px" }}>
+
+              <p style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>⚠ Red Flags</p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+
+                {safeData.redFlags.map(
+
+  (f: string, i: number) => (
+
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 10px", background: "#FEF2F2", borderRadius: 7 }}>
+
+                    <span style={{ color: "#dc2626", fontSize: 10, marginTop: 1 }}>✕</span>
+
+                    <span style={{ fontSize: 12, color: "#991b1b", fontWeight: 500, lineHeight: 1.4 }}>{f}</span>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+          )}
 
 
-              {/* ── SKILLS ── */}
-              {tab === "skills" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-                  <div>
-                    <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 14 }}>
-                      Matched Skills <span style={{ color: "#16a34a" }}>({safeData.matchedSkills.length})</span>
-                    </p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                      {safeData.matchedSkills.map((s: string) => (
-                        <span key={s} style={{ padding: "5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 500, background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#15803d" }}>✓ {s}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 14 }}>
-                      Missing Skills <span style={{ color: "#dc2626" }}>({safeData.skillGaps.length})</span>
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {safeData.skillGaps.map(
-  (gap: string, i: number) => {
-                        const conf = [
-                          { color: "#dc2626", bg: "#FEF2F2", border: "#FECACA", label: "High priority" },
-                          { color: "#d97706", bg: "#FFFBEB", border: "#FDE68A", label: "Medium" },
-                          { color: "#6b7280", bg: "#F9FAFB", border: "#E5E7EB", label: "Low" },
-                        ][Math.min(i, 2)];
-                        return (
-                          <div key={gap} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderRadius: 8, background: conf.bg, border: `1px solid ${conf.border}` }}>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: conf.color }}>{gap}</span>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: conf.color, textTransform: "uppercase", letterSpacing: "0.06em" }}>{conf.label}</span>
-                          </div>
-                        );
-                      })}
-                      <p style={{ fontSize: 11, color: "#CCC", marginTop: 2 }}>Add these to boost your ATS match rate.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {/* ── KEYWORDS ── */}
-              {tab === "keywords" && (
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em" }}>Keyword Coverage</p>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#2563eb" }}>{kwFound} of {safeData.keywords.length} detected</span>
-                  </div>
-                  <Bar value={(kwFound / safeData.keywords.length) * 100} color="#2563eb" delay={150} h={5} />
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 18 }}>
-                    {safeData.keywords.map(
-  (k: KeywordItem) => <KwChip key={k.word} {...k} />)}
-                  </div>
-                  <p style={{ fontSize: 11, color: "#CCC", marginTop: 14 }}>
-                    <span style={{ color: "#15803d", fontWeight: 600 }}>● Found</span> — present in resume.&nbsp;&nbsp;
-                    <span style={{ color: "#dc2626", fontWeight: 600 }}>○ Missing</span> — add to boost ATS pass rate.
-                  </p>
-                </div>
-              )}
+          {/* Strengths */}
+
+         {/* Strengths */}
+
+<div
+
+  style={{
+
+    background: "#fff",
+
+    border: "1px solid #BBF7D0",
+
+    borderRadius: 12,
+
+    padding: "16px 18px",
+
+  }}
+
+>
+
+  <p
+
+    style={{
+
+      fontSize: 10,
+
+      color: "#16a34a",
+
+      fontWeight: 700,
+
+      textTransform: "uppercase",
+
+      letterSpacing: "0.09em",
+
+      marginBottom: 10,
+
+    }}
+
+  >
+
+    ✓ Strengths
+
+  </p>
+
+
+
+  <div
+
+    style={{
+
+      display: "flex",
+
+      flexDirection: "column",
+
+      gap: 6,
+
+    }}
+
+  >
+
+    {[...safeData.experienceStrengths, ...safeData.projectStrengths].map(
+
+      (s, i) => (
+
+        <div
+
+          key={i}
+
+          style={{
+
+            display: "flex",
+
+            gap: 8,
+
+            alignItems: "flex-start",
+
+          }}
+
+        >
+
+          <span
+
+            style={{
+
+              color: "#16a34a",
+
+              fontSize: 10,
+
+              marginTop: 2,
+
+            }}
+
+          >
+
+            ●
+
+          </span>
+
+
+
+          <span
+
+            style={{
+
+              fontSize: 12,
+
+              color: "#166534",
+
+              lineHeight: 1.5,
+
+            }}
+
+          >
+
+            {s}
+
+          </span>
+
+        </div>
+
+      )
+
+    )}
+
+  </div>
+
+</div>
+
+             
+
+            
 
               {/* ── ACTION PLAN ── */}
               {tab === "suggestions" && (
@@ -746,91 +885,23 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
         </div>
 
         {/* ── RIGHT COLUMN: Resume Preview + Red Flags ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+       {/* RIGHT COLUMN */}
+<div
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+
+    position: "sticky",
+    top: 72,
+    alignSelf: "start",
+  }}
+>
 
           {/* Resume preview */}
           <ResumePreview lines={safeData.resumeLines} highlights={safeData.matchedSkills} />
 
-          {/* Red flags */}
-          {safeData.redFlags.length > 0 && (
-            <div style={{ background: "#fff", border: "1px solid #FECACA", borderRadius: 12, padding: "16px 18px" }}>
-              <p style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>⚠ Red Flags</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                {safeData.redFlags.map(
-  (f: string, i: number) => (
-                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 10px", background: "#FEF2F2", borderRadius: 7 }}>
-                    <span style={{ color: "#dc2626", fontSize: 10, marginTop: 1 }}>✕</span>
-                    <span style={{ fontSize: 12, color: "#991b1b", fontWeight: 500, lineHeight: 1.4 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Strengths */}
-         {/* Strengths */}
-<div
-  style={{
-    background: "#fff",
-    border: "1px solid #BBF7D0",
-    borderRadius: 12,
-    padding: "16px 18px",
-  }}
->
-  <p
-    style={{
-      fontSize: 10,
-      color: "#16a34a",
-      fontWeight: 700,
-      textTransform: "uppercase",
-      letterSpacing: "0.09em",
-      marginBottom: 10,
-    }}
-  >
-    ✓ Strengths
-  </p>
-
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: 6,
-    }}
-  >
-    {[...safeData.experienceStrengths, ...safeData.projectStrengths].map(
-      (s, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "flex-start",
-          }}
-        >
-          <span
-            style={{
-              color: "#16a34a",
-              fontSize: 10,
-              marginTop: 2,
-            }}
-          >
-            ●
-          </span>
-
-          <span
-            style={{
-              fontSize: 12,
-              color: "#166534",
-              lineHeight: 1.5,
-            }}
-          >
-            {s}
-          </span>
-        </div>
-      )
-    )}
-  </div>
-</div>
+          
 
 {/* PASTE CTA HERE */}
 <div
