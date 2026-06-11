@@ -317,7 +317,7 @@ const handleResumeUpload = async (
 
     <div className="workflow-image-card">
       <img
-        src="/analysis.png"
+        src="/Analysis.png"
         alt="AI Analysis"
       />
     </div>
