@@ -44,6 +44,9 @@ const LEADERSHIP_SIGNALS = [
   "led", "managed", "owned", "mentored", "coordinated", "directed",
   "headed", "supervised", "oversaw", "spearheaded", "championed",
   "cross-functional", "stakeholder", "roadmap", "prioritized", "strategy",
+  // Collaborative / agile signals — common in internships and junior roles
+  "collaborated", "agile", "scrum", "sprint", "team of", "cross-team",
+  "partnered", "liaised", "facilitated", "delegated",
 ];
 
 const RELEVANCE_SIGNALS = [
@@ -63,19 +66,34 @@ const METRIC_RE =
 // ─── Scoring helpers ──────────────────────────────────────────────────────────
 
 function scoreActionVerbs(text: string): { score: number; strongCount: number; weakCount: number } {
-  const words = text.toLowerCase().match(/\b\w+\b/g) ?? [];
-  let strongCount = 0;
-  let weakCount   = 0;
-  const seen = new Set<string>();
+  // Split into bullet lines for per-bullet verb analysis
+  const lines = text.split("\n").map(l => l.trim()).filter(l => /^[•\-*▸►✓→·]/.test(l));
+  const allText = text.toLowerCase();
+  const words = allText.match(/\b\w+\b/g) ?? [];
 
+  let strongCount = 0;    // unique strong verbs used
+  let weakCount = 0;      // unique weak verbs used
+  let repetitionPenalty = 0;
+
+  const verbUsageCounts: Record<string, number> = {};
   for (const word of words) {
-    if (STRONG_VERBS.has(word) && !seen.has(word)) { strongCount++; seen.add(word); }
-    if (WEAK_VERBS.has(word)   && !seen.has(word)) { weakCount++;   seen.add(word); }
+    if (STRONG_VERBS.has(word) || WEAK_VERBS.has(word)) {
+      verbUsageCounts[word] = (verbUsageCounts[word] ?? 0) + 1;
+    }
   }
 
-  // Unique strong verbs matter more than repetition
-  // 8+ unique strong verbs = 100; each strong = +10, each weak = -5
-  const raw = Math.min(strongCount * 10 - weakCount * 3, 100);
+  for (const [verb, count] of Object.entries(verbUsageCounts)) {
+    if (STRONG_VERBS.has(verb)) {
+      strongCount++;
+      // Using the same strong verb 3+ times is repetitive — mild penalty
+      if (count >= 3) repetitionPenalty += (count - 2) * 2;
+    } else {
+      weakCount++;
+    }
+  }
+
+  // 8+ unique strong verbs = perfect; each strong = +10, each weak = -5
+  const raw = Math.min(strongCount * 10 - weakCount * 3 - repetitionPenalty, 100);
   return { score: Math.max(raw, 0), strongCount, weakCount };
 }
 
@@ -102,10 +120,11 @@ function scoreRelevance(text: string): { score: number; signals: string[] } {
 
 function scoreConsistency(experienceText: string): number {
   const lines = experienceText.split("\n").map((l) => l.trim()).filter(Boolean);
-  const bulletLines = lines.filter((l) => /^[•\-*▸►]/.test(l));
+  // Accept both leading-char bullets AND lines that start with a bullet after trimming
+  // (common when PDFs add leading spaces before the bullet character)
+  const bulletLines = lines.filter((l) => /^[•\-*▸►✓→·]/.test(l));
   const bulletRatio = bulletLines.length / Math.max(lines.length, 1);
 
-  // Good: >60% of lines are structured bullets
   let score = Math.round(bulletRatio * 80);
 
   // Bonus: date ranges present (signals complete, professional entries)

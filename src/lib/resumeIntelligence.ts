@@ -325,7 +325,7 @@ function analyzeATS(
   // ── FORMAT-SIDE CHECKS ────────────────────────────────────────────────────
 
   if (/\|\s*.+\s*\|/.test(resumeText)) {
-    flags.push("Table layout detected — ATS parsers may scramble column order.");
+    flags.push("Table layout detected");
     deductions += 20;
   }
 
@@ -386,7 +386,8 @@ function analyzeATS(
     deductions += 20;
   }
 
-  // 6. Verb tense consistency — past roles should use past tense
+  // 6. Verb tense consistency — only flag if there is NO current role
+  //    (present-tense verbs are correct for an active position)
   const hasPresentRole = /\b(present|current|now)\b/i.test(resumeText);
   const presentTenseCount = (resumeText.match(/\b(build|lead|manage|create|design|develop|maintain|support)\b/gi) ?? []).length;
   if (!hasPresentRole && presentTenseCount > 2) {
@@ -438,16 +439,28 @@ function analyzeContact(resumeText: string): ContactInfo {
 function calcStructureScore(
   sections: ReturnType<typeof analyzeSections>
 ): number {
+  // Each section has a max weight; presence alone earns 40% of that weight,
+  // the remaining 60% scales with the section's own quality score (0–100).
+  // This prevents a detected-but-empty section from inflating the structure score.
+  const weights: Array<{ key: keyof typeof sections; weight: number }> = [
+    { key: "experience",          weight: 30 },
+    { key: "projects",            weight: 20 },
+    { key: "skills",              weight: 18 },
+    { key: "education",           weight: 17 },
+    { key: "achievements",        weight: 10 },
+    { key: "certifications",      weight: 5  },
+  ];
+
   let score = 0;
+  for (const { key, weight } of weights) {
+    const section = sections[key];
+    if (section.found) {
+      // 40% for presence, 60% proportional to section quality
+      score += weight * (0.4 + 0.6 * (section.score / 100));
+    }
+  }
 
-  if (sections.experience.found) score += 30;
-  if (sections.projects.found) score += 20;
-  if (sections.skills.found) score += 18;
-  if (sections.education.found) score += 17;
-  if (sections.achievements.found) score += 10;
-  if (sections.certifications.found) score += 5;
-
-  return Math.min(100, score);
+  return Math.min(100, Math.round(score));
 }
 
 
@@ -663,7 +676,17 @@ const ats = analyzeATS(resumeText, readability.bulletCount, wordCount, resumeLen
     too_short:   "warning",
     too_long:    "long",
   };
-  const keywordDensityScore = 75;
+  // Real keyword density: ratio of unique meaningful words vs all meaningful words
+  // Ideal: 0.15–0.35 (varied vocabulary, not stuffed or monotonous)
+  const allMeaningfulWords = resumeText.toLowerCase().match(/\b[a-z]{5,}\b/g) ?? [];
+  const uniqueKeywords = new Set(allMeaningfulWords).size;
+  const keywordDensity = allMeaningfulWords.length > 0 ? uniqueKeywords / allMeaningfulWords.length : 0;
+  const keywordDensityScore =
+    keywordDensity >= 0.15 && keywordDensity <= 0.35
+      ? 100
+      : keywordDensity < 0.15
+      ? Math.round((keywordDensity / 0.15) * 100)
+      : Math.round(Math.max(0, 100 - (keywordDensity - 0.35) * 300));
 
   return {
     structureScore,

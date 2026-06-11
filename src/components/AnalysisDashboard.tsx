@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ReactNode } from "react";
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -52,7 +51,7 @@ function AnimNum({
 
 // ── Big ATS ring ──────────────────────────────────────────────────────────────
 function ATSRing({ score }: { score: number }) {
-  const size = 180, stroke = 13;
+  const size = 150, stroke = 10;
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const [offset, setOffset] = useState(circ);
@@ -76,7 +75,7 @@ function ATSRing({ score }: { score: number }) {
           style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(0.22,1,0.36,1)", filter: `drop-shadow(0 0 6px ${color}60)` }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
-        <span style={{ fontSize: 52, fontWeight: 700, color: "#111", lineHeight: 1, letterSpacing: "-3px", fontFamily: "Inter, sans-serif" }}>
+        <span style={{ fontSize: 40, fontWeight: 700, color: "#111", lineHeight: 1, letterSpacing: "-3px", fontFamily: "Inter, sans-serif" }}>
           <AnimNum to={score} />
         </span>
         <span style={{ fontSize: 11, color: "#AAA", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, marginTop: 3 }}>Resume Score</span>
@@ -275,11 +274,7 @@ function ResumePreview({
 }
 
 // ── Section status pill ───────────────────────────────────────────────────────
-const STATUS = {
-  good:    { label: "Good",    color: "#15803d", bg: "#F0FDF4", border: "#BBF7D0", dot: "#16a34a" },
-  warning: { label: "Improve", color: "#d97706", bg: "#FFFBEB", border: "#FDE68A", dot: "#d97706" },
-  missing: { label: "Missing", color: "#dc2626", bg: "#FEF2F2", border: "#FECACA", dot: "#dc2626" },
-};
+
 
 interface AnalysisDashboardProps {
   analysisData: any;
@@ -289,6 +284,9 @@ export default function NexunDashboard({
   analysisData,
 }: AnalysisDashboardProps) {
   const [tab, setTab] = useState("overview");
+
+  const [expandedSection, setExpandedSection] =
+    useState<string | null>(null);
 
   if (!analysisData) {
     return (
@@ -415,7 +413,8 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
               </p>
 
               {/* 3 signal bars — no number, just qualitative */}
-             <div
+              
+  <div
   style={{
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -452,7 +451,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 
     <div
       style={{
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: 700,
         color: "#111",
       }}
@@ -513,7 +512,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 
   <div
     style={{
-      fontSize: 22,
+      fontSize: 18,
       fontWeight: 700,
       color: "#111",
     }}
@@ -561,8 +560,23 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 
               {/* ── OVERVIEW ── */}
               {tab === "overview" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-                  
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 24,
+    }}
+  >
+                  <div
+  style={{
+    background: "#fff",
+    border: "1px solid #EBEBEA",
+    borderRadius: 12,
+    padding: 16,
+  }}
+>
+  {/* Section Health content */}
+
 
                   {/* Section health */}
                   <div>
@@ -573,13 +587,28 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
     s: SectionItem,
     i: number
   ) => {
-    const sc =
-      STATUS[s.status];
+
+    const score = s.score ?? 0;
+
+    const scoreColor =
+      score >= 80
+        ? "#16a34a"
+        : score >= 60
+        ? "#d97706"
+        : "#dc2626";
 
     return (
       <div
-        key={s.name}
-        style={{
+  key={s.name}
+  onClick={() =>
+    setExpandedSection(
+      expandedSection === s.name
+        ? null
+        : s.name
+    )
+  }
+  style={{
+    cursor: "pointer",
           padding: "12px 0",
           borderBottom:
             i < safeData.sections.length - 1
@@ -606,13 +635,14 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
             }}
           >
             <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: sc.dot,
-              }}
-            />
+  style={{
+    color: "#888",
+    fontSize: 11,
+    width: 12,
+  }}
+>
+  {expandedSection === s.name ? "▼" : "▶"}
+</span>
             <span
               style={{
                 fontSize: 13,
@@ -624,21 +654,18 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
           </div>
 
           <span
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "3px 9px",
-              borderRadius: 5,
-              color: sc.color,
-              background: sc.bg,
-              border: `1px solid ${sc.border}`,
-            }}
-          >
-            {sc.label}
-          </span>
+  style={{
+    fontSize: 12,
+    fontWeight: 700,
+    color: scoreColor,
+  }}
+>
+  {score}%
+</span>
         </div>
 
-       {(s.issues?.length ?? 0) > 0 && (
+      {expandedSection === s.name &&
+ (s.issues?.length ?? 0) > 0 && (
           <div
             style={{
               paddingLeft: 16,
@@ -669,9 +696,19 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 )}
                     </div>
                   </div>
+                  </div>
 
                   {/* ATS compliance checklist */}
                   <div>
+                    {/* ATS compliance checklist */}
+<div
+  style={{
+    background: "#fff",
+    border: "1px solid #EBEBEA",
+    borderRadius: 12,
+    padding: 16,
+  }}
+>
                     <p style={{ fontSize: 11, color: "#AAA", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 14 }}>MUST HAVE</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                       {safeData.atsChecklist?.map(
@@ -684,167 +721,179 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
                     </div>
                   </div>
                 </div>
+                </div>
               )}
+              <br></br>
 {/* Red flags */}
 
-          {safeData.redFlags.length > 0 && (
+    {safeData.redFlags.length > 0 && (
+  <div
+    style={{
+      background: "#fff",
+      border: "1px solid #F3D2D2",
+      borderRadius: 12,
+      padding: "14px 16px",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 12,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          color: "#dc2626",
+        }}
+      >
+        ⚠
+      </span>
 
-            <div style={{ background: "#fff", border: "1px solid #FECACA", borderRadius: 12, padding: "16px 18px" }}>
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "#dc2626",
+        }}
+      >
+        Red Flags
+      </span>
+    </div>
 
-              <p style={{ fontSize: 10, color: "#dc2626", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>⚠ Red Flags</p>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      {safeData.redFlags.map((flag: string, i: number) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            padding: "10px 12px",
+            borderRadius: 8,
+            background: "#FEF7F7",
+          }}
+        >
+          <span
+            style={{
+              color: "#dc2626",
+              fontSize: 11,
+              marginTop: 2,
+              flexShrink: 0,
+            }}
+          >
+            ●
+          </span>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-
-                {safeData.redFlags.map(
-
-  (f: string, i: number) => (
-
-                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "8px 10px", background: "#FEF2F2", borderRadius: 7 }}>
-
-                    <span style={{ color: "#dc2626", fontSize: 10, marginTop: 1 }}>✕</span>
-
-                    <span style={{ fontSize: 12, color: "#991b1b", fontWeight: 500, lineHeight: 1.4 }}>{f}</span>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            </div>
-
-          )}
-
-
+          <span
+            style={{
+              fontSize: 13,
+              color: "#7F1D1D",
+              lineHeight: 1.5,
+            }}
+          >
+            {flag}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+ <br></br>
 
           {/* Strengths */}
 
          {/* Strengths */}
 
 <div
-
   style={{
-
     background: "#fff",
-
-    border: "1px solid #BBF7D0",
-
+    border: "1px solid #D7F0DD",
     borderRadius: 12,
-
-    padding: "16px 18px",
-
+    padding: "14px 16px",
   }}
-
 >
-
-  <p
-
-    style={{
-
-      fontSize: 10,
-
-      color: "#16a34a",
-
-      fontWeight: 700,
-
-      textTransform: "uppercase",
-
-      letterSpacing: "0.09em",
-
-      marginBottom: 10,
-
-    }}
-
-  >
-
-    ✓ Strengths
-
-  </p>
-
-
-
   <div
-
     style={{
-
       display: "flex",
-
-      flexDirection: "column",
-
-      gap: 6,
-
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 12,
     }}
-
   >
+    <span
+      style={{
+        fontSize: 12,
+        color: "#16a34a",
+      }}
+    >
+      ✓
+    </span>
 
-    {[...safeData.experienceStrengths, ...safeData.projectStrengths].map(
-
-      (s, i) => (
-
-        <div
-
-          key={i}
-
-          style={{
-
-            display: "flex",
-
-            gap: 8,
-
-            alignItems: "flex-start",
-
-          }}
-
-        >
-
-          <span
-
-            style={{
-
-              color: "#16a34a",
-
-              fontSize: 10,
-
-              marginTop: 2,
-
-            }}
-
-          >
-
-            ●
-
-          </span>
-
-
-
-          <span
-
-            style={{
-
-              fontSize: 12,
-
-              color: "#166534",
-
-              lineHeight: 1.5,
-
-            }}
-
-          >
-
-            {s}
-
-          </span>
-
-        </div>
-
-      )
-
-    )}
-
+    <span
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        color: "#16a34a",
+      }}
+    >
+      Strengths
+    </span>
   </div>
 
-</div>
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    }}
+  >
+    {[...safeData.experienceStrengths, ...safeData.projectStrengths].map(
+      (s, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "flex-start",
+          }}
+        >
+          <span
+            style={{
+              color: "#16a34a",
+              fontSize: 10,
+              marginTop: 3,
+            }}
+          >
+            ●
+          </span>
 
+          <span
+            style={{
+              fontSize: 13,
+              color: "#166534",
+              lineHeight: 1.5,
+            }}
+          >
+            {s}
+          </span>
+        </div>
+      )
+    )}
+  </div>
+</div>
              
 
             

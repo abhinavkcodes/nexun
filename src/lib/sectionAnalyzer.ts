@@ -142,41 +142,168 @@ function scoreProfessionalSummary(content: string): SectionResult {
   if (!content.trim()) {
     return {
       found: false, score: 0, content: "",
-      issues: ["No professional summary/objective found — add a 2–4 line summary at the top"],
+      issues: [
+        "No professional summary found — add a 3–5 sentence paragraph at the top of your resume.",
+        "A strong summary should state: your role/title → years of experience → 2–3 top skills → one measurable achievement or career goal.",
+        "Example: 'Full Stack Developer with 3+ years building scalable React/Node.js applications. Delivered a platform serving 50k+ users and reduced API response time by 35%. Seeking a senior engineering role focused on distributed systems.'",
+      ],
     };
   }
+
   const issues: string[] = [];
-  let score = 30;
+  let score = 10; // base: section exists but quality must be earned
 
-  const wordCount = content.split(/\s+/).filter(Boolean).length;
+  const words = content.split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
 
-  // Ideal summary: 40–80 words
-  if (wordCount >= 40 && wordCount <= 120) score += 25;
-  else if (wordCount >= 20) score += 12;
-  else issues.push("Summary is too short — aim for 40–80 words");
+  // ── CHECK 1: Length (15 pts) ─────────────────────────────────────────────────
+  // Ideal ATS-friendly summary: 40–100 words (3–5 sentences)
+  if (wordCount >= 40 && wordCount <= 100) {
+    score += 15;
+  } else if (wordCount >= 25 && wordCount < 40) {
+    score += 8;
+    issues.push(
+      `Summary is short (${wordCount} words) — expand to 40–100 words. ` +
+      "Add context about your experience level, core skills, and one concrete achievement or goal."
+    );
+  } else if (wordCount > 100 && wordCount <= 130) {
+    score += 10;
+    issues.push(
+      `Summary is slightly long (${wordCount} words) — trim to under 100 words. ` +
+      "Remove adjectives and filler phrases; every sentence should add a distinct fact."
+    );
+  } else if (wordCount > 130) {
+    score += 5;
+    issues.push(
+      `Summary is too long (${wordCount} words) — recruiters spend ~7 seconds on a resume. ` +
+      "Condense to 3–5 punchy sentences (40–100 words) focusing on your strongest selling points."
+    );
+  } else {
+    // < 25 words
+    issues.push(
+      `Summary is very short (${wordCount} words) — this reads like a placeholder. ` +
+      "Write 3–5 sentences: who you are, what you bring, and what you're looking for."
+    );
+  }
 
-  if (wordCount > 150) { score -= 10; issues.push("Summary is too long — keep it under 120 words"); }
+  // ── CHECK 2: Role / Title mention (15 pts) ───────────────────────────────────
+  const ROLE_RE = /(software\s+engineer|frontend|back[\s-]?end|full[\s-]?stack|data\s+scientist|data\s+analyst|ml\s+engineer|devops|cloud\s+engineer|product\s+manager|ui\/ux|ux\s+designer|web\s+developer|mobile\s+developer|android|ios\s+developer|engineer|developer|analyst|designer|manager|scientist|consultant|specialist|architect|intern|researcher|programmer)/i;
+  const hasRole = ROLE_RE.test(content);
+  if (hasRole) {
+    score += 15;
+  } else {
+    issues.push(
+      "Your job title/role is not mentioned in the summary. " +
+      "Start with a clear identity statement, e.g. 'Full Stack Developer', 'Data Analyst', or 'Backend Engineer'."
+    );
+  }
 
-  // Contains role/title mention
-  const hasRole = /(engineer|developer|analyst|designer|manager|scientist|consultant|specialist|architect|intern)/i.test(content);
-  if (hasRole) score += 15;
-  else issues.push("Mention your role/title in the summary (e.g. 'Full Stack Developer with 3+ years...')");
+  // ── CHECK 3: Years of experience (10 pts) ────────────────────────────────────
+  const hasYoe = /(\d+\+?\s*years?\s*(of)?\s*(experience|exp|background|expertise|practice))|(\bentry[\s-]level\b|\bfresher\b|\brecent\s+graduate\b)/i.test(content);
+  if (hasYoe) {
+    score += 10;
+  } else {
+    issues.push(
+      "Experience level is not stated. Add a signal like '3+ years of experience', '2 years building ...', " +
+      "or if you're entry-level, say 'recent Computer Science graduate' or 'entry-level developer'."
+    );
+  }
 
-  // Contains years-of-experience signal
-  const hasYoe = /\d+\+?\s*years?/i.test(content);
-  if (hasYoe) score += 10;
+  // ── CHECK 4: Hard technical skills (15 pts) ──────────────────────────────────
+  const TECH_RE = /(python|javascript|typescript|react|angular|vue|node\.?js|java|kotlin|swift|go|golang|rust|c\+\+|c#|\.net|ruby|rails|php|laravel|django|flask|fastapi|spring|express|sql|postgresql|mysql|mongodb|redis|docker|kubernetes|aws|gcp|azure|terraform|linux|git|graphql|rest\s+api|machine\s+learning|deep\s+learning|nlp|pytorch|tensorflow|scikit[\s-]learn|pandas|spark|hadoop|tableau|power\s*bi|excel)/i;
+  const techMatches = content.match(new RegExp(TECH_RE.source, "gi")) ?? [];
+  const uniqueTechSkills = new Set(techMatches.map(s => s.toLowerCase())).size;
 
-  // Contains at least one hard skill
-  const hasSkill = /(python|javascript|react|java|sql|machine learning|cloud|aws|node|typescript|golang|c\+\+)/i.test(content);
-  if (hasSkill) score += 10;
-  else issues.push("Include 1–2 key technical skills in the summary");
+  if (uniqueTechSkills >= 3) {
+    score += 15;
+  } else if (uniqueTechSkills >= 1) {
+    score += 8;
+    issues.push(
+      `Only ${uniqueTechSkills} technical skill(s) detected in summary. ` +
+      "Include 2–3 of your strongest skills so recruiters and ATS systems can immediately identify your stack."
+    );
+  } else {
+    issues.push(
+      "No recognisable technical skills found in summary. " +
+      "Name your top 2–3 technologies/tools (e.g. 'React, Node.js, PostgreSQL') to pass ATS keyword filters."
+    );
+  }
 
-  // Penalise generic fluff phrases
-  const fluff = /(passionate about|hard[\s-]?working|team\s*player|fast learner|detail[\s-]?oriented|highly motivated)/gi;
-  const fluffCount = (content.match(fluff) ?? []).length;
-  if (fluffCount >= 2) { score -= 10; issues.push("Avoid generic buzzwords (e.g. 'passionate', 'hard-working') — be specific"); }
+  // ── CHECK 5: Quantified achievement or impact (15 pts) ───────────────────────
+  const hasMetric = METRIC_RE.test(content);
+  const hasImpactVerb = /(increased|reduced|improved|saved|delivered|built|launched|scaled|optimised|optimized|boosted|cut|grew|led|shipped|deployed)/i.test(content);
 
-  return { found: true, score: Math.min(score, 100), content, issues };
+  if (hasMetric) {
+    score += 15;
+  } else if (hasImpactVerb) {
+    score += 7;
+    issues.push(
+      "Good — you used an impact verb, but no numbers were found. " +
+      "Add a metric to make it concrete: e.g. 'reduced load time by 40%', 'built a system serving 10k+ users', 'improved test coverage from 45% to 90%'."
+    );
+  } else {
+    issues.push(
+      "No quantified achievement found in summary. " +
+      "Include at least one number or result to demonstrate impact: e.g. 'delivered 5 production features', 'reduced bug count by 30%', 'led a team of 4 engineers'."
+    );
+  }
+
+  // ── CHECK 6: Value proposition / career goal clarity (10 pts) ────────────────
+  const hasGoal = /(seeking|looking for|aspiring|passionate about building|focused on|specialising in|specializing in|with a focus on|aiming to|goal is|passionate about|interested in)/i.test(content);
+  const hasDomain = /(fintech|edtech|healthtech|e[\s-]?commerce|saas|startup|enterprise|b2b|b2c|open[\s-]?source|distributed\s+systems|real[\s-]?time|embedded|systems\s+programming|backend\s+systems|data\s+engineering|platform|infrastructure|product)/i.test(content);
+
+  if (hasGoal || hasDomain) {
+    score += 10;
+  } else {
+    issues.push(
+      "Summary doesn't communicate what kind of role or domain you're targeting. " +
+      "Add a closing line like 'seeking a backend engineering role at a growth-stage startup' or 'focused on data engineering and real-time analytics'."
+    );
+  }
+
+  // ── CHECK 7: First-person 'I' usage (penalty –8) ─────────────────────────────
+  // Resumes should be written in the implied first person — starting bullets/sentences
+  // with verbs, never with "I". This is a universal resume convention.
+  const firstPersonCount = (content.match(/\bI\b/g) ?? []).length;
+  if (firstPersonCount >= 2) {
+    score -= 8;
+    issues.push(
+      `Found ${firstPersonCount} uses of 'I' in the summary — remove all of them. ` +
+      "Resume summaries use the implied first person: start sentences with your role or strong verbs, not 'I'. " +
+      "Bad: 'I am a developer who built...' → Good: 'Full Stack Developer who built...'"
+    );
+  } else if (firstPersonCount === 1) {
+    score -= 3;
+    issues.push(
+      "Avoid using 'I' in your resume summary — it's a common mistake. " +
+      "Replace with your title or a verb: 'I designed...' → 'Designed...'"
+    );
+  }
+
+  // ── CHECK 8: Fluff / generic buzzword penalty (–10) ──────────────────────────
+  const FLUFF_RE = /(passionate about|hard[\s-]?working|team\s*player|fast\s*learner|detail[\s-]?oriented|highly motivated|self[\s-]?starter|go[\s-]?getter|dynamic professional|results[\s-]?driven|proven track record|synergy|think outside the box|out[\s-]?of[\s-]?the[\s-]?box|leverage|utilize|proactive individual|seasoned professional|ninja|rockstar|guru|wizard|visionary|thought leader|strategic thinker)/gi;
+  const fluffMatches = content.match(FLUFF_RE) ?? [];
+  const fluffCount = fluffMatches.length;
+
+  if (fluffCount === 0) {
+    score += 10; // bonus for clean, specific language
+  } else if (fluffCount === 1) {
+    score -= 3;
+    issues.push(
+      `Buzzword detected: "${fluffMatches[0]}". ` +
+      "Replace it with a specific fact. Instead of 'highly motivated', say what you actually did: 'shipped 3 production features per sprint'."
+    );
+  } else {
+    score -= 10;
+    const quoted = fluffMatches.slice(0, 3).map(f => `"${f}"`).join(", ");
+    issues.push(
+      `${fluffCount} generic buzzwords found (${quoted}${fluffCount > 3 ? ", ..." : ""}). ` +
+      "These phrases add no value and hurt ATS ranking. Replace each with a concrete skill, achievement, or fact. " +
+      "E.g. 'team player' → 'collaborated with a 6-engineer team to deliver X on schedule'."
+    );
+  }
+
+  return { found: true, score: Math.min(Math.max(score, 0), 100), content, issues };
 }
 
 function scoreSkillsSection(content: string): SectionResult {

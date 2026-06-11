@@ -9,8 +9,8 @@ export default function ATSScoreCard({ score }: ATSScoreCardProps) {
   const [bar, setBar] = useState(0);
   useEffect(() => { const t = setTimeout(() => setBar(score), 150); return () => clearTimeout(t); }, [score]);
 
-  const color = score >= 80 ? "#4ade80" : score >= 60 ? "#fbbf24" : "#f87171";
-  const label = score >= 80 ? "ATS Friendly" : score >= 60 ? "Needs Work" : "Poor Match";
+  const color = score >= 75 ? "#4ade80" : score >= 50 ? "#fbbf24" : "#f87171";
+  const label = score >= 75 ? "ATS Friendly" : score >= 50 ? "Needs Work" : "Poor Match";
 
   return (
     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "18px 20px" }}>
@@ -26,7 +26,7 @@ export default function ATSScoreCard({ score }: ATSScoreCardProps) {
         <div className="h-full rounded-full" style={{ width: `${bar}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}60`, transition: "width 1.1s cubic-bezier(0.34,1.56,0.64,1)" }} />
       </div>
       <p className="text-xs text-white/35 mt-2">
-        {score >= 80 ? "Your resume passes most ATS filters." : score >= 60 ? "Some keywords or formatting may be filtered." : "Resume may be rejected by ATS systems."}
+        {score >= 75 ? "Your resume passes most ATS filters." : score >= 50 ? "Some keywords or formatting may be filtered." : "Resume may be rejected by ATS systems."}
       </p>
     </div>
   );

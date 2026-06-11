@@ -108,20 +108,15 @@ const atsChecklist = [
   { label: "LinkedIn URL",             ok: intelligence.contact.linkedin },
   { label: "GitHub profile",           ok: intelligence.contact.github },
   { label: "Portfolio/Website",        ok: intelligence.contact.portfolio },
-  { label: "Professional Summary",     ok: sectionAnalysis.professionalSummary.found },
-  { label: "Skills section",           ok: sectionAnalysis.skills.found },
-  { label: "Experience section",       ok: sectionAnalysis.experience.found },
-  { label: "Education section",        ok: sectionAnalysis.education.found },
-  { label: "Certifications",           ok: sectionAnalysis.certifications.found },
-  { label: "Achievements",             ok: sectionAnalysis.achievements.found },
-  { label: "Leadership & Activities",  ok: sectionAnalysis.leadership.found },
+  
   // ATS risk flags surfaced as checklist items
   ...intelligence.ats.flags.slice(0, 3).map((flag) => ({
     label: flag.length > 60 ? flag.slice(0, 57) + "…" : flag,
     ok: false,
   })),
 ];
-
+console.log("ATS CHECKLIST GENERATED:");
+console.log(atsChecklist);
 
     // ── Build keyword coverage ───────────────────────────────────────────────
     const resumeLower = resumeText.toLowerCase();
