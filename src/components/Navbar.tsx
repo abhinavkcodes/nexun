@@ -19,20 +19,9 @@ export default function Navbar() {
         {/* Center Navigation */}
         <div className="navbar-links">
 
-          <Link href="#features">
-            Features
-          </Link>
-
-          <Link href="#how-it-works">
-            How It Works
-          </Link>
-
-          <Link href="#cover-letter">
-            Cover Letter
-          </Link>
-<Link href="#cover-letter">
-            FAQ
-          </Link>
+          <Link href="/#features">Features</Link>
+<Link href="/#how-it-works">How It Works</Link>
+<Link href="/#faq">FAQ</Link>
        
         </div>
 
@@ -40,14 +29,14 @@ export default function Navbar() {
         <div className="navbar-actions">
 
           <Link
-            href="/signin"
+            href="/login"
             className="btn-ghost"
           >
             Log In
           </Link>
 
           <Link
-            href="/upload"
+           href="/signup"
             className="btn-primary"
           >
             Sign Up
