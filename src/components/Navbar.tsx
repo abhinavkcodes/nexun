@@ -30,30 +30,10 @@ export default function Navbar() {
           <Link href="#cover-letter">
             Cover Letter
           </Link>
-
-          {/* Resume Dropdown */}
-         <div
-  className="nav-dropdown"
-  onMouseEnter={() => setResumeOpen(true)}
-  onMouseLeave={() => setResumeOpen(false)}
->
-  <button
-    className="nav-dropdown-trigger"
-    onClick={() => setResumeOpen(!resumeOpen)}
-  >
-    Resume ▾
-  </button>
-
-  {resumeOpen && (
-    <div className="nav-dropdown-menu">
-      <Link href="/analysis">Resume Checker</Link>
-      <Link href="/builder">Resume Builder</Link>
-      <Link href="/templates">Resume Templates</Link>
-      <Link href="/examples">Resume Examples</Link>
-    </div>
-  )}
-</div>
-
+<Link href="#cover-letter">
+            FAQ
+          </Link>
+       
         </div>
 
         {/* Right Side */}
@@ -63,14 +43,14 @@ export default function Navbar() {
             href="/signin"
             className="btn-ghost"
           >
-            Sign In
+            Log In
           </Link>
 
           <Link
             href="/upload"
             className="btn-primary"
           >
-            Analyze Resume
+            Sign Up
           </Link>
 
         </div>

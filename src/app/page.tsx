@@ -56,32 +56,27 @@ const handleResumeUpload = async (
 };
   return (
     <main className="home-page">
-      <Navbar />
-
+     
       {/* ── HERO ── */}
       <section className="hero">
         {/* LEFT column */}
         <div className="hero-left">
-          
 
           <h1 className="hero-heading">
   <span className="heading-light">
-    Get More Interviews.
+        Get More Interviews
+
   </span>
 
   <span className="heading-dark">
     Fix Your Resume in Seconds.
   </span>
 </h1>
-<div className="hero-features">
-  <span>ATS Score</span>
-  <span>Missing Keywords</span>
-  <span>Recruiter Feedback</span>
-  <span>Resume Builder</span>
-</div>
-          <p className="hero-sub">
-  Upload your resume and get ATS scoring, recruiter insights,
-  keyword optimization, and actionable improvements in seconds.
+
+         <p className="hero-sub">
+  Upload your resume and receive ATS scoring,
+  keyword optimization, recruiter insights,
+  and actionable improvements in seconds.
 </p>
 
           <input
@@ -101,9 +96,7 @@ const handleResumeUpload = async (
   {isScanning ? "Scanning Resume..." : "Analyze My Resume"}
 </button>
 
-  <Link href="/upload" className="cta-secondary">
-      Build Resume
-  </Link>
+ 
 </div>
 
           {/* Social proof */}
@@ -167,9 +160,13 @@ const handleResumeUpload = async (
       alt="ATS Analysis"
       className="analysis-preview"
     />
+    
   </div>
+  
 </div>
+
 </div>
+
 
           {/* Floating score badge */}
       
@@ -179,19 +176,29 @@ const handleResumeUpload = async (
         </div>
       </section>
       
+<section className="hero-marquee">
+  <div className="marquee-track">
+    <div className="marquee-content">
+      <span>✦ ATS Compatible</span>
+      <span>✦ AI Resume Analysis</span>
+      <span>✦ Keyword Optimization</span>
+      <span>✦ Recruiter Insights</span>
+      <span>✦ Resume Scoring</span>
+      <span>✦ Instant Feedback</span>
+    </div>
 
+    <div className="marquee-content">
+      <span>✦ ATS Compatible</span>
+      <span>✦ AI Resume Analysis</span>
+      <span>✦ Keyword Optimization</span>
+      <span>✦ Recruiter Insights</span>
+      <span>✦ Resume Scoring</span>
+      <span>✦ Instant Feedback</span>
+    </div>
+  </div>
+</section>
       {/* ── TRUSTED BY ── */}
-      <section className="trusted-by">
-        <p className="trusted-label">Trusted by Professionals at top companies</p>
-        <div className="trusted-logos">
-          <span>Google</span>
-          <span>Notion</span>
-          <span>Zoom</span>
-          <span>Coinbase</span>
-          <span>Dropbox</span>
-          <span>Medium</span>
-        </div>
-      </section>
+     
     </main>
   );
 }
