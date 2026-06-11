@@ -19,7 +19,7 @@ const roleDatabase: Record<string, string[]> = {
     "react", "next.js", "node.js", "express", "mongodb",
     "postgresql", "full-stack", "fullstack", "api", "full stack",
   ],
-  "software engineer": [
+  "Software engineer": [
   "java",
   "python",
   "javascript",
@@ -89,7 +89,7 @@ const roleDatabase: Record<string, string[]> = {
   "serverless",
   "iam",
 ],
-"software engineer (backend/cloud)": [
+"Software engineer (backend/cloud)": [
   "java",
   "docker",
   "kubernetes",
@@ -154,7 +154,7 @@ const roleBoosts: Record<string, Record<string, number>> = {
 export function detectRole(resumeText: string): RoleDetectionResult {
   const text = resumeText.toLowerCase();
 
-  let bestRole = "software engineer";
+  let bestRole = "Software engineer";
   let bestScore = 0;
   let matchedKeywords: string[] = [];
 
@@ -187,7 +187,7 @@ if (normalizedScore > bestScore) {
     Math.round((bestScore / (keywordCount + maxBoost)) * 100)
   );
 if (confidence < 65) {
-  bestRole = "software engineer";
+  bestRole = "Software engineer";
 }
   return {
     role: bestRole,

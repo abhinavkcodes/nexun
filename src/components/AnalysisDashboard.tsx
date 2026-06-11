@@ -418,7 +418,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
             <div>
               <div style={{ marginBottom: 14 }}>
                 <p style={{ fontSize: 11, color: "#AAA", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 4 }}>Detected Role</p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: "#111", letterSpacing: "-0.5px", fontFamily: "'Instrument Serif', Georgia, serif" }}>{safeData.jobTitle}</p>
+                <p style={{ fontSize: 20, fontWeight: 700, color: "#111", letterSpacing: "-0.5px", fontFamily: "'Inter', sans-serif" }}>{safeData.jobTitle}</p>
               </div>
 
               <p style={{ fontSize: 13, color: "#666", lineHeight: 1.6, marginBottom: 12, fontStyle: "italic", borderLeft: "2px solid #E5E5E3", paddingLeft: 12 }}>

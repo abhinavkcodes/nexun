@@ -295,9 +295,10 @@ const handleResumeUpload = async (
       <div className="step-number">3</div>
 
       <div>
-        <h3>Get Insights</h3>
+        <h3>Improve & Stand Out
+</h3>
         <p>
-          Receive actionable improvements and recommendations.
+         Get clear recommendations to boost resume.
         </p>
       </div>
     </div>
@@ -323,7 +324,7 @@ const handleResumeUpload = async (
 
     <div className="workflow-image-card">
       <img
-        src="/score-preview.png"
+        src="/insight.png"
         alt="ATS Score"
       />
     </div>
