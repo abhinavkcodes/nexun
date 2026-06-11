@@ -20,9 +20,22 @@ const roleDatabase: Record<string, string[]> = {
     "postgresql", "full-stack", "fullstack", "api", "full stack",
   ],
   "software engineer": [
-    "java", "python", "javascript", "sql", "git",
-    "algorithms", "data structures", "oop", "system design",
-  ],
+  "java",
+  "python",
+  "javascript",
+  "sql",
+  "git",
+  "algorithms",
+  "data structures",
+  "oop",
+  "system design",
+  "docker",
+  "rest api",
+  "backend",
+  "distributed systems",
+  "microservices",
+  "kubernetes",
+],
   "data analyst": [
     "excel", "power bi", "tableau", "sql", "analytics",
     "dashboard", "data analysis", "pandas", "looker", "metabase",
@@ -40,14 +53,54 @@ const roleDatabase: Record<string, string[]> = {
     "prompt engineering", "embedding", "ai", "fine-tuning",
     "hugging face", "transformers",
   ],
-  "devops engineer": [
-    "docker", "kubernetes", "jenkins", "github actions",
-    "terraform", "ci/cd", "ansible", "linux", "bash",
-  ],
+"devops engineer": [
+  "docker",
+  "kubernetes",
+  "helm",
+  "keda",
+  "prometheus",
+  "thanos",
+  "jenkins",
+  "github actions",
+  "terraform",
+  "ci/cd",
+  "ansible",
+  "linux",
+  "bash",
+  "devops",
+  "observability",
+  "monitoring",
+  "cloud infrastructure",
+  "infrastructure",
+],
   "cloud engineer": [
-    "aws", "azure", "gcp", "cloud", "lambda",
-    "ec2", "s3", "serverless", "iam",
-  ],
+  "aws",
+  "azure",
+  "gcp",
+  "cloud",
+  "cloud infrastructure",
+  "kubernetes",
+  "helm",
+  "terraform",
+  "prometheus",
+  "thanos",
+  "ec2",
+  "s3",
+  "serverless",
+  "iam",
+],
+"software engineer (backend/cloud)": [
+  "java",
+  "docker",
+  "kubernetes",
+  "helm",
+  "prometheus",
+  "thanos",
+  "backend",
+  "rest api",
+  "cloud",
+  "distributed systems",
+],
   "cybersecurity analyst": [
     "penetration testing", "owasp", "burp suite",
     "nmap", "security", "vulnerability", "ethical hacking", "soc",
@@ -67,6 +120,7 @@ const roleDatabase: Record<string, string[]> = {
   "business analyst": [
     "business analysis", "requirements", "stakeholder",
     "process improvement", "documentation", "bpmn", "erp",
+    
   ],
 };
 
@@ -114,8 +168,11 @@ export function detectRole(resumeText: string): RoleDetectionResult {
       if (text.includes(kw)) score += weight;
     }
 
-    if (score > bestScore) {
-      bestScore = score;
+   const normalizedScore =
+  score / keywords.length;
+
+if (normalizedScore > bestScore) {
+      let bestScore = 0;
       bestRole = role;
       matchedKeywords = matches;
     }
@@ -129,7 +186,9 @@ export function detectRole(resumeText: string): RoleDetectionResult {
     100,
     Math.round((bestScore / (keywordCount + maxBoost)) * 100)
   );
-
+if (confidence < 65) {
+  bestRole = "software engineer";
+}
   return {
     role: bestRole,
     confidence,

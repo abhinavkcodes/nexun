@@ -196,15 +196,62 @@ export function analyzeExperience(experienceText: string): ExperienceAnalysis {
   //  leadership  0.20           — unchanged
   //  relevance   0.17  (was 0.15)
   //  consistency 0.13  (was 0.10)
-  const weightedScore = Math.round(
-    actionVerbScore  * 0.28 +
-    metricsScore     * 0.22 +
-    leadershipScore  * 0.20 +
-    relevanceScore   * 0.17 +
-    consistencyScore * 0.13
-  );
+ const weightedScore = Math.round(
+  actionVerbScore  * 0.28 +
+  metricsScore     * 0.22 +
+  leadershipScore  * 0.20 +
+  relevanceScore   * 0.17 +
+  consistencyScore * 0.13
+);
+
+// ─────────────────────────────────────────────
+// Internship / Company Prestige Bonus
+// ─────────────────────────────────────────────
+
+const lowerText = experienceText.toLowerCase();
+
+let prestigeBonus = 0;
+
+const COMPANY_BONUSES: Record<string, number> = {
+  oracle: 4,
+  google: 5,
+  microsoft: 5,
+  amazon: 5,
+  meta: 5,
+  adobe: 4,
+  salesforce: 4,
+  atlassian: 4,
+  uber: 4,
+  linkedin: 4,
+  "goldman sachs": 4,
+  "jp morgan": 4,
+  jpmorgan: 4,
+};
+
+for (const [company, bonus] of Object.entries(COMPANY_BONUSES)) {
+  const companyRegex = new RegExp(
+  `${company}.*?(intern|engineer|developer|analyst|researcher)|
+   (intern|engineer|developer|analyst|researcher).*?${company}`,
+  "i"
+);
+
+if (companyRegex.test(experienceText)) {
+    prestigeBonus = bonus;
+    break;
+  }
+}
+
+const finalScore = Math.min(
+  100,
+  weightedScore + prestigeBonus
+);
 
   const strengths: string[] = [];
+  if (prestigeBonus > 0) {
+  strengths.push(
+    "Experience includes internship/work at a recognized industry organization"
+  );
+}
   const weaknesses: string[] = [];
 
   // Action verbs
@@ -240,7 +287,7 @@ export function analyzeExperience(experienceText: string): ExperienceAnalysis {
   }
 
   return {
-    score: weightedScore,
+    score: finalScore,
     actionVerbScore,
     metricsScore,
     leadershipScore,

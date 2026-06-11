@@ -156,12 +156,11 @@ function countBullets(content: string): number {
 function scoreProfessionalSummary(content: string): SectionResult {
   if (!content.trim()) {
     return {
-      found: false, score: 0, content: "",
+      found: false, score: 60, content: "",
       issues: [
-        "No professional summary found — add a 3–5 sentence paragraph at the top of your resume.",
-        "A strong summary: your role/title → years of experience → 2–3 top skills → one measurable achievement or career goal.",
-        "Example: 'Full Stack Developer with 3+ years building scalable React/Node.js applications. Delivered a platform serving 50k+ users and reduced API response time by 35%. Seeking a senior engineering role focused on distributed systems.'",
-      ],
+  "Professional summary is optional but recommended."
+]
+      ,
     };
   }
 
@@ -486,7 +485,7 @@ function scoreProjectsSection(content: string): SectionResult {
 function scoreEducationSection(content: string): SectionResult {
   if (!content.trim()) {
     return {
-      found: false, score: 0, content: "",
+      found: false, score: 60, content: "",
       issues: [
         "Education section not found — add your degree, institution, and graduation year.",
       ],
@@ -665,6 +664,23 @@ function scoreLeadershipSection(content: string): SectionResult {
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function analyzeSections(resumeText: string): SectionAnalysis {
+
+  const certificationsSection =
+    extractSection(resumeText, SECTION_PATTERNS.certifications);
+
+  const achievementsSection =
+    extractSection(resumeText, SECTION_PATTERNS.achievements);
+
+  const certificationFallback =
+    certificationsSection ||
+    (
+      /nptel|coursera|udemy|aws|azure|gcp|oracle|meta/i.test(
+        achievementsSection
+      )
+        ? achievementsSection
+        : ""
+    );
+
   return {
     professionalSummary: scoreProfessionalSummary(
       extractSection(resumeText, SECTION_PATTERNS.professionalSummary)
@@ -681,9 +697,9 @@ export function analyzeSections(resumeText: string): SectionAnalysis {
     education: scoreEducationSection(
       extractSection(resumeText, SECTION_PATTERNS.education)
     ),
-    certifications: scoreCertificationsSection(
-      extractSection(resumeText, SECTION_PATTERNS.certifications)
-    ),
+   certifications: scoreCertificationsSection(
+  certificationFallback
+),
     achievements: scoreAchievementsSection(
       extractSection(resumeText, SECTION_PATTERNS.achievements)
     ),
