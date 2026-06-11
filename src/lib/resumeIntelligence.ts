@@ -237,7 +237,9 @@ function analyzeReadability(resumeText: string): ReadabilityAnalysis {
 
   // Score logic:
   // - Bullet-heavy resumes are easier to parse (ATS + human)
-  // - Avg bullet length 8–16 words is ideal (too short = vague, too long = essay)
+  // - Avg bullet length: technical resumes naturally run 16–24 words (detail matters)
+  //   The old threshold of <=16 penalised well-written quantified bullets unfairly.
+  //   Industry standard (Jobscan, Zety) accepts 15–25 words as ideal for tech roles.
   // - Grade 10–14 is the professional sweet spot
   let score = 50;
 
@@ -246,9 +248,10 @@ function analyzeReadability(resumeText: string): ReadabilityAnalysis {
   else if (bulletCount >= 8) score += 10;
   else if (bulletCount >= 4) score += 5;
 
-  // Bullet length
-  if (avgWordsPerBullet >= 8 && avgWordsPerBullet <= 16) score += 20;
-  else if (avgWordsPerBullet >= 5 && avgWordsPerBullet <= 20) score += 10;
+  // Bullet length — widened for technical resumes (quantified bullets are naturally longer)
+  if (avgWordsPerBullet >= 10 && avgWordsPerBullet <= 24) score += 20;
+  else if (avgWordsPerBullet >= 7 && avgWordsPerBullet <= 30) score += 10;
+  else if (avgWordsPerBullet > 30) score += 0; // genuinely too verbose
 
   // Grade level
   if (gradeLevel >= 10 && gradeLevel <= 14) score += 15;
@@ -396,7 +399,12 @@ function analyzeATS(
   }
 
   // 7. Location signal — many ATS auto-filter by location
-  const hasLocation = /\b([A-Z][a-z]+,?\s*(India|USA|UK|Canada|Remote|[A-Z]{2}))\b/.test(resumeText);
+  // Expanded to catch: "Chennai, India", "New Delhi", "Bangalore", remote declarations,
+  // and the common "City, State" two-letter format
+  const hasLocation =
+    /\b([A-Z][a-z]+([\s,]+)(India|USA|UK|Canada|Australia|Germany|Remote|[A-Z]{2}))\b/.test(resumeText) ||
+    /\b(remote|hybrid|on[\s-]?site|relocat)/i.test(resumeText) ||
+    /\b(mumbai|delhi|bangalore|bengaluru|chennai|hyderabad|pune|kolkata|ahmedabad|noida|gurugram|gurgaon)\b/i.test(resumeText);
   if (!hasLocation) {
     flags.push("No location detected — some ATS systems filter by geography.");
     deductions += 5;
@@ -587,32 +595,74 @@ function calcOverallScore(
   resumeLength: number,
   ats: number,
   contact: number,
-  experienceLevel: ExperienceLevel   // ← add this param
+  experienceLevel: ExperienceLevel
 ): number {
   // Metrics weight scales with seniority — entry resumes aren't punished for few numbers
-  const metricsW = experienceLevel === "entry" ? 0.08 : experienceLevel === "mid" ? 0.12 : 0.16;
-  const experienceW = 0.22;
-  const structureW  = 0.15;
-  const atsW        = 0.13;   // raised — ATS gates before humans see the resume
-  const projectW    = 0.13;
-  const readabilityW = 0.10;
-  const achievementW = 0.08;
-  const resumeLenW  = 0.05;
-  const contactW    = 0.02;
-  // Remaining weight fills metrics slot (total always = 1.0)
-  const remaining = 1 - (experienceW + structureW + atsW + projectW + readabilityW + achievementW + resumeLenW + contactW);
-  const finalMetricsW = Math.min(metricsW, remaining);
+  // All weights are explicit and sum to exactly 1.0 for every experience level.
+  //
+  // Weight philosophy:
+  //   experience   0.22 — single biggest signal; quality of work descriptions
+  //   structure    0.15 — sections present and populated
+  //   ats          0.13 — ATS compatibility gates recruiter visibility
+  //   project      0.13 — depth of project work (key for entry/mid)
+  //   readability  0.10 — formatting and clarity
+  //   achievement  0.08 — awards, rankings, hackathons
+  //   metrics      0.08/0.10/0.12 — scales with seniority (entry less punished)
+  //   resumeLength 0.05 — length appropriateness
+  //   contact      0.02 — completeness of contact info
+  //
+  // Entry:  metrics=0.08, the freed 0.04 goes to project (entry candidates lead with projects)
+  // Mid:    metrics=0.10, the freed 0.02 goes to experience
+  // Senior: metrics=0.12, no slack — experience weight stays
+
+  type Weights = {
+    experienceW: number; structureW: number; atsW: number; projectW: number;
+    readabilityW: number; achievementW: number; metricsW: number;
+    resumeLenW: number; contactW: number;
+  };
+
+  const WEIGHTS: Record<ExperienceLevel, Weights> = {
+    entry: {
+      experienceW: 0.22, structureW: 0.15, atsW: 0.13, projectW: 0.17,  // +0.04 project
+      readabilityW: 0.10, achievementW: 0.08, metricsW: 0.08,
+      resumeLenW: 0.05, contactW: 0.02,  // total: 1.00
+    },
+    mid: {
+      experienceW: 0.24, structureW: 0.15, atsW: 0.13, projectW: 0.13,  // +0.02 experience
+      readabilityW: 0.10, achievementW: 0.08, metricsW: 0.10,
+      resumeLenW: 0.05, contactW: 0.02,  // total: 1.00
+    },
+    senior: {
+      experienceW: 0.22, structureW: 0.15, atsW: 0.13, projectW: 0.13,
+      readabilityW: 0.10, achievementW: 0.08, metricsW: 0.12,
+      resumeLenW: 0.05, contactW: 0.02,  // total: 1.00
+    },
+    executive: {
+      experienceW: 0.25, structureW: 0.15, atsW: 0.12, projectW: 0.08,
+      readabilityW: 0.10, achievementW: 0.08, metricsW: 0.14,
+      resumeLenW: 0.05, contactW: 0.03,  // total: 1.00
+    },
+  };
+
+  const w = WEIGHTS[experienceLevel];
+
+  // Verify weights sum to 1.0 (guard against future drift)
+  const total = w.experienceW + w.structureW + w.atsW + w.projectW +
+                w.readabilityW + w.achievementW + w.metricsW + w.resumeLenW + w.contactW;
+  if (Math.abs(total - 1.0) > 0.001) {
+    console.warn(`[calcOverallScore] weights sum to ${total} for level ${experienceLevel} — expected 1.0`);
+  }
 
   const weighted =
-    experience   * experienceW  +
-    structure    * structureW   +
-    ats          * atsW         +
-    metrics      * finalMetricsW +
-    project      * projectW     +
-    readability  * readabilityW +
-    achievement  * achievementW +
-    resumeLength * resumeLenW   +
-    contact      * contactW;
+    experience   * w.experienceW   +
+    structure    * w.structureW    +
+    ats          * w.atsW          +
+    metrics      * w.metricsW      +
+    project      * w.projectW      +
+    readability  * w.readabilityW  +
+    achievement  * w.achievementW  +
+    resumeLength * w.resumeLenW    +
+    contact      * w.contactW;
 
   return Math.min(100, Math.round(weighted));
 }

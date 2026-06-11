@@ -57,6 +57,11 @@ const RELEVANCE_SIGNALS = [
   "sql", "python", "javascript", "typescript", "react", "node",
   "data", "analytics", "automation", "performance", "latency",
   "revenue", "conversion", "retention", "nps",
+  // Additional entry-level / intern signals
+  "pandas", "numpy", "excel", "tableau", "power bi", "visualization",
+  "dataset", "model", "accuracy", "endpoint", "schema", "query",
+  "vercel", "django", "express", "rest", "flask", "postgresql",
+  "machine learning", "langchain", "llm", "two-week", "stakeholder",
 ];
 
 /** Regex for quantified impact: 35%, 10K users, $2M, 3x faster, etc. */

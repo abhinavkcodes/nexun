@@ -101,6 +101,8 @@ export async function POST(req: NextRequest) {
     const atsResult    = analyzeATS(resumeText, roleAnalysis, intelligence);
     const sectionAnalysis = analyzeSections(resumeText);
     const resumeLines = generateResumePreview(resumeText);
+    console.log("RESUME LINES");
+console.log(resumeLines);
 
 const atsChecklist = [
   { label: "Email address",            ok: intelligence.contact.email },

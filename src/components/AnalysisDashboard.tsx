@@ -202,77 +202,369 @@ type ATSChecklistItem = {
 };
 
 // ── Mini resume preview ───────────────────────────────────────────────────────
+// ── Issue-based highlight logic ───────────────────────────────────────────────
+const WEAK_VERBS = [
+  "responsible for","helped","assisted","worked on","worked with",
+  "involved in","participated in","contributed to","supported",
+  "was part of","tasked with","duties included","handled",
+  "collaborated","communicated","coordinated","liaised",
+  "ensured","maintained","monitored","reviewed","updated",
+  "prepared","processed","performed","executed","conducted",
+  "attended","completed","followed","utilized","used",
+  "helped to","tried to","attempted to","worked to",
+];
+const TECH_KEYWORDS = [
+  "react",
+  "next.js",
+  "typescript",
+  "javascript",
+  "node",
+  "express",
+  "python",
+  "java",
+  "spring",
+  "mysql",
+  "postgresql",
+  "mongodb",
+  "aws",
+  "docker",
+  "kubernetes",
+  "redis",
+  "git",
+];
+ 
+const BUZZWORDS = [
+  "hardworking","hard-working","team player","passionate","motivated",
+  "detail-oriented","self-starter","go-getter","results-driven",
+  "proactive","dynamic","synergy","leveraged","utilize",
+  "strategic thinker","innovative","thought leader","fast learner",
+  "quick learner","eager","enthusiastic","dedicated","committed",
+  "strong work ethic","excellent communication","good communication",
+  "problem solver","critical thinker","multitasker",
+];
+ 
+const STRONG_VERB_ALTERNATIVES = {
+  "responsible for": ["Owned","Led","Drove","Directed"],
+  "helped": ["Accelerated","Enabled","Supported → try: Built"],
+  "assisted": ["Partnered","Co-led","Facilitated"],
+  "worked on": ["Built","Engineered","Developed","Delivered"],
+  "worked with": ["Collaborated cross-functionally with → but drop filler"],
+  "utilized": ["Used → or better: Built with, Deployed, Implemented"],
+  "used": ["Implemented","Deployed","Integrated"],
+  "maintained": ["Scaled","Optimized","Hardened"],
+  "coordinated": ["Orchestrated","Directed","Aligned"],
+  "ensured": ["Achieved","Delivered","Enforced"],
+  "reviewed": ["Audited","Evaluated","Assessed"],
+  "supported": ["Enabled","Accelerated","Amplified"],
+  "contributed to": ["Delivered","Shipped","Built"],
+  "handled": ["Managed","Owned","Resolved"],
+  "monitored": ["Tracked","Measured","Instrumented"],
+  "prepared": ["Produced","Authored","Crafted"],
+  "conducted": ["Led","Ran","Executed → try: Drove"],
+  "participated in": ["Led","Contributed as [specific role]"],
+  "completed": ["Delivered","Shipped","Finished ahead of schedule"],
+};
+const ISSUE_STYLES: Record<string, React.CSSProperties> = {
+  weak_verb: {
+    background: "#FEE2E2",
+    borderBottom: "2px solid #dc2626",
+    color: "#991b1b",
+    fontWeight: 600,
+    borderRadius: 2,
+    padding: "0 2px",
+  },
+  
+  missing_kw: {
+    background: "#FFFBEB",
+    borderBottom: "2px dashed #d97706",
+    color: "#92400e",
+    fontWeight: 500,
+    borderRadius: 2,
+    padding: "0 2px",
+  },
+};
+
+const ISSUE_TITLES: Record<string, string> = {
+  weak_verb: "Weak verb — use strong action verbs like: Led, Built, Increased, Reduced",
+  missing_kw: "Missing keyword — found in job description but not in your resume",
+};
+
+// Only flags bullet lines with NO numbers AND no strong action verb at start
+function isMissingMetric(text: string): boolean {
+  const cleaned = text.replace(/^[•\-–—*]\s*/, "").trim();
+
+  const hasMetric =
+    /\d+\.?\d*\s*%|\$[\d,]+|\d+x|\d+\+|\d+\s*(users|customers|clients|requests|hours|days|ms|records|features|projects)/i.test(
+      cleaned
+    );
+
+  return !hasMetric;
+}
+function isMissingTechnology(text: string): boolean {
+  const lower = text.toLowerCase();
+
+  return !TECH_KEYWORDS.some((tech) =>
+    lower.includes(tech)
+  );
+}
+
+type Segment = { text: string; issue: "weak_verb" | "buzzword" | "missing_kw" | null };
+
+function segmentBulletInner(
+  text: string,
+  missingKws: string[]
+): Segment[] {
+
+  const lower = text.toLowerCase();
+
+  for (const phrase of WEAK_VERBS) {
+    const idx = lower.indexOf(phrase);
+
+    if (idx !== -1) {
+      return [
+        ...segmentBulletInner(
+          text.slice(0, idx),
+          missingKws
+        ),
+
+        {
+          text: text.slice(
+            idx,
+            idx + phrase.length
+          ),
+          issue: "weak_verb",
+        },
+
+        ...segmentBulletInner(
+          text.slice(idx + phrase.length),
+          missingKws
+        ),
+      ];
+    }
+  }
+
+  return text.split(/(\s+)/).map((word) => {
+
+    const clean = word
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+    const isMissingKeyword =
+      missingKws.some(
+        kw =>
+          kw.length > 3 &&
+          clean ===
+            kw
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "")
+      );
+
+    return {
+      text: word,
+      issue: isMissingKeyword
+        ? "missing_kw"
+        : null,
+    };
+  });
+}
+
+function segmentBullet(text: string, missingKws: string[]): Segment[] {
+  const match = text.match(/^([•\-–—*]\s*)(.*)/s);
+  if (match) {
+    return [
+      { text: match[1], issue: null },
+      ...segmentBulletInner(match[2], missingKws),
+    ];
+  }
+  return segmentBulletInner(text, missingKws);
+}
+  
 function ResumePreview({
   lines,
-  highlights,
+  keywords,
 }: {
   lines: ResumeLine[];
-  highlights: string[];
+  keywords?: KeywordItem[];
 }) {
+  const missingKws = keywords
+    ? keywords.filter(k => !k.found).map(k => k.word.toLowerCase())
+    : [];
+
+  function renderBullet(text: string) {
+
+  const looksLikeSection =
+    text === text.toUpperCase() &&
+    text.length < 40;
+
+  const looksLikeEducation =
+    text.includes("University") ||
+    text.includes("Institute") ||
+    text.includes("College") ||
+    text.includes("B.Tech") ||
+    text.includes("Bachelor") ||
+    text.includes("Master");
+
+  const looksLikeSkills =
+    text.startsWith("Languages:") ||
+    text.startsWith("Frontend:") ||
+    text.startsWith("Backend:") ||
+    text.startsWith("Tools:");
+
+  if (
+    looksLikeSection ||
+    looksLikeEducation ||
+    looksLikeSkills
+  ) {
+    return (
+      <p
+        style={{
+          fontSize: 11,
+          color: "#475569",
+          margin: 0,
+          lineHeight: 1.6,
+        }}
+      >
+        {text}
+      </p>
+    );
+  }
+
+  const segments = segmentBullet(text, missingKws);
+
+  const hasInlineIssue =
+    segments.some((s) => s.issue !== null);
+
+  const isBulletLine =
+  text.trim().startsWith("•") ||
+  text.trim().startsWith("-");
+
+const flagNoMetric =
+  isBulletLine &&
+  text.length > 40 &&
+  isMissingMetric(text);
+
+const flagNoTech =
+  isBulletLine &&
+  text.length > 40 &&
+  isMissingTechnology(text);
+
   return (
-    <div style={{
-      background: "#fff", border: "1px solid #E5E5E3", borderRadius: 12,
-      overflow: "hidden", fontFamily: "Inter, sans-serif",
-    }}>
-      {/* preview header bar */}
+    <div style={{ display: "flex", gap: 7, marginBottom: 4 }}>
+      <span
+        style={{
+          color:
+            flagNoMetric
+              ? "#ea580c"
+              : flagNoTech
+              ? "#2563eb"
+              : "#94a3b8",
+          fontSize: 8,
+          marginTop: 3,
+          flexShrink: 0,
+        }}
+      >
+        {flagNoMetric
+          ? "📊"
+          : flagNoTech
+          ? "🛠"
+          : "●"}
+      </span>
+
+      <p
+        style={{
+          fontSize: 11,
+          lineHeight: 1.6,
+          margin: 0,
+          color:
+            hasInlineIssue || flagNoMetric
+              ? "#1e293b"
+              : "#475569",
+        }}
+      >
+        {segments.map((seg, i) =>
+          seg.issue ? (
+            <span
+              key={i}
+              style={ISSUE_STYLES[seg.issue]}
+              title={ISSUE_TITLES[seg.issue]}
+            >
+              {seg.text}
+            </span>
+          ) : (
+            <span key={i}>{seg.text}</span>
+          )
+        )}
+      </p>
+    </div>
+  );
+}
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #E5E5E3", borderRadius: 12, overflow: "hidden" }}>
+      {/* Titlebar */}
       <div style={{ background: "#F7F7F6", borderBottom: "1px solid #E5E5E3", padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ display: "flex", gap: 5 }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#ff5f57", display: "block" }} />
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#ffbd2e", display: "block" }} />
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#28c840", display: "block" }} />
+          {["#ff5f57", "#ffbd2e", "#28c840"].map(c => (
+            <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, display: "block" }} />
+          ))}
         </div>
         <span style={{ fontSize: 11, color: "#AAA", marginLeft: 4, fontWeight: 500 }}>Resume Preview</span>
+        <span style={{ marginLeft: "auto", fontSize: 10, color: "#CCC" }}>PDF</span>
       </div>
-      {/* content */}
-      <div
-  style={{
-    padding: "18px 16px",
-    maxHeight: "65vh",
-    overflowY: "auto",
-  }}
->
-        {lines.map((line: ResumeLine, i: number) => {
-          if (line.type === "name") return (
-            <p key={i} style={{ fontSize: 15, fontWeight: 700, color: "#111", marginBottom: 2, letterSpacing: "-0.3px" }}>{line.text}</p>
-          );
-          if (line.type === "contact") return (
-            <p key={i} style={{ fontSize: 9, color: "#888", marginBottom: 10, lineHeight: 1.5 }}>{line.text}</p>
-          );
-          if (line.type === "section") return (
-            <div key={i} style={{ marginTop: 14, marginBottom: 5, paddingBottom: 3, borderBottom: "1.5px solid #E5E5E3" }}>
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "#555", textTransform: "uppercase" }}>{line.text}</span>
-            </div>
-          );
-          if (line.type === "role") return (
-            <p key={i} style={{ fontSize: 11, fontWeight: 600, color: "#222", marginBottom: 1, marginTop: 6 }}>{line.text}</p>
-          );
-          if (line.type === "date") return (
-            <p key={i} style={{ fontSize: 9, color: "#AAA", marginBottom: 4 }}>{line.text}</p>
-          );
-          if (line.type === "bullet") {
-            // highlight keywords found in bullet
-            const isHighlighted = highlights && highlights.some((kw: string) => line.text.toLowerCase().includes(kw.toLowerCase()));
+
+      {/* Legend */}
+      <div style={{ padding: "8px 14px", background: "#FAFAF9", borderBottom: "1px solid #EBEBEA", display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {[
+          { color: "#dc2626", bg: "#FEE2E2", label: "Weak verb" },
+          { color: "#3b82f6", bg: "#EFF6FF", label: "Buzzword" },
+          { color: "#d97706", bg: "#FFFBEB", label: "Missing keyword" },
+          { color: "#ea580c", bg: "#FFF7ED", label: "No metric" },
+        ].map(({ color, bg, label }) => (
+          <span key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: bg, border: `1px solid ${color}`, display: "inline-block" }} />
+            {label}
+          </span>
+        ))}
+      </div>
+
+      {/* Resume body */}
+      <div style={{ padding: "20px 18px", maxHeight: "70vh", overflowY: "auto" }}>
+        {lines.map((line, i) => {
+
+  console.log(
+    "PREVIEW:",
+    line.type,
+    line.text
+  );
+
+          if (line.type === "name")
+            return <p key={i} style={{ fontSize: 17, fontWeight: 800, color: "#111", marginBottom: 2 }}>{line.text}</p>;
+          if (line.type === "contact")
+            return <p key={i} style={{ fontSize: 10, color: "#777", marginBottom: 12 }}>{line.text}</p>;
+          if (line.type === "section")
             return (
-              <div key={i} style={{ display: "flex", gap: 6, marginBottom: 3, alignItems: "flex-start" }}>
-                <span style={{ color: "#CCC", fontSize: 9, marginTop: 2, flexShrink: 0 }}>•</span>
-                <p style={{ fontSize: 10, color: "#555", lineHeight: 1.5,
-                  background: isHighlighted ? "#FFF9C4" : "transparent",
-                  borderRadius: isHighlighted ? 3 : 0, padding: isHighlighted ? "0 2px" : 0 }}>
-                  {line.text}
-                </p>
+              <div key={i} style={{ marginTop: 16, marginBottom: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.14em", color: "#334155", textTransform: "uppercase" as const }}>{line.text}</span>
+                  <div style={{ flex: 1, height: 1, background: "#E2E8F0" }} />
+                </div>
               </div>
             );
-          }
-          if (line.type === "skills") return (
-            <p key={i} style={{ fontSize: 10, color: "#555", lineHeight: 1.7, marginTop: 4 }}>{line.text}</p>
-          );
+          if (line.type === "role")
+            return <p key={i} style={{ fontSize: 12, fontWeight: 700, color: "#1e293b", marginTop: 8 }}>{line.text}</p>;
+          if (line.type === "date")
+            return <p key={i} style={{ fontSize: 10, color: "#94a3b8", marginBottom: 5 }}>{line.text}</p>;
+    if (line.type === "bullet") {
+  return <div key={i}>{renderBullet(line.text)}</div>;
+}
+          if (line.type === "skills")
+            return <p key={i} style={{ fontSize: 10.5, color: "#475569", lineHeight: 1.7 }}>{line.text}</p>;
           return null;
         })}
       </div>
     </div>
   );
 }
-
 // ── Section status pill ───────────────────────────────────────────────────────
 
 
@@ -947,8 +1239,11 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
   }}
 >
 
-          {/* Resume preview */}
-          <ResumePreview lines={safeData.resumeLines} highlights={safeData.matchedSkills} />
+            {/* Resume preview */}
+          <ResumePreview
+  lines={safeData.resumeLines}
+  keywords={safeData.keywords}
+/>
 
           
 
