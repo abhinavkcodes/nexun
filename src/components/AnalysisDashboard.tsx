@@ -20,12 +20,13 @@ function scoreBorder(s: number) {
   if (s >= 60) return "#FDE68A";
   return "#FECACA";
 }
-function scoreLabel(s: number) {
-  if (s >= 80) return "ATS Friendly";
-  if (s >= 60) return "Needs Work";
-  return "Poor Match";
+function scoreLabel(score: number) {
+  if (score >= 90) return "Excellent";
+  if (score >= 80) return "Strong";
+  if (score >= 65) return "Good";
+  if (score >= 50) return "Needs Improvement";
+  return "Weak";
 }
-
 // ── Animated counter ──────────────────────────────────────────────────────────
 function AnimNum({
   to,
@@ -78,7 +79,7 @@ function ATSRing({ score }: { score: number }) {
         <span style={{ fontSize: 52, fontWeight: 700, color: "#111", lineHeight: 1, letterSpacing: "-3px", fontFamily: "Inter, sans-serif" }}>
           <AnimNum to={score} />
         </span>
-        <span style={{ fontSize: 11, color: "#AAA", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, marginTop: 3 }}>ATS Score</span>
+        <span style={{ fontSize: 11, color: "#AAA", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, marginTop: 3 }}>Resume Score</span>
       </div>
     </div>
   );
@@ -362,12 +363,12 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
           <div style={{ background: "#fff", border: "1px solid #E5E5E3", borderRadius: 16, padding: "28px 28px 24px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center" }}>
             {/* Big ring — THE hero element */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-              <ATSRing score={safeData.atsScore} />
+             <ATSRing score={safeData.overallScore} />
               <span style={{
                 fontSize: 13, fontWeight: 700, padding: "5px 18px", borderRadius: 8,
-                color: scoreColor(safeData.atsScore), background: scoreBg(safeData.atsScore),
-                border: `1px solid ${scoreBorder(safeData.atsScore)}`,
-              }}>{scoreLabel(safeData.atsScore)}</span>
+                color: scoreColor(safeData.overallScore), background: scoreBg(safeData.overallScore),
+                border: `1px solid ${scoreBorder(safeData.overallScore)}`,
+              }}>{scoreLabel(safeData.overallScore)}</span>
             </div>
 
             {/* Right side: role, recruiter quote, key signal bars */}
