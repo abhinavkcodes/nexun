@@ -105,12 +105,12 @@ export interface ATSResult {
  */
 const SCORE_WEIGHTS = {
   roleMatch:      0.15,
-  experience:     0.22,
-  project:        0.18,
-  structure:      0.14,
+  experience:     0.24,
+  project:        0.23,
+  structure:      0.10,
   keywordDensity: 0.10,
   metrics:        0.08,
-  achievement:    0.07,
+  achievement:    0.1,
   readability:    0.04,
   compliance:     0.02,
 } as const;
@@ -132,6 +132,15 @@ const THRESHOLDS = {
   missingSkillsMinor:   2,
   missingSkillsMajor:   4,
 } as const;
+const HIGH_SIGNAL_COMPANIES = [
+ "oracle",
+ "microsoft",
+ "google",
+ "amazon",
+ "meta",
+ "adobe",
+ "salesforce"
+];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
