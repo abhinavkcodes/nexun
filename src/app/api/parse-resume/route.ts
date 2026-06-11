@@ -3,7 +3,7 @@
 // Receives a PDF upload, runs the full analysis pipeline, and returns
 // the complete AnalysisData shape consumed by AnalysisDashboard.
 // ─────────────────────────────────────────────────────────────────────────────
-
+import { prisma } from "../../../lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { extractPdfText } from "../../../lib/pdf";
 import { analyzeResume } from "../../../lib/analyzer";
@@ -101,6 +101,9 @@ export async function POST(req: NextRequest) {
     const atsResult    = analyzeATS(resumeText, roleAnalysis, intelligence);
     const sectionAnalysis = analyzeSections(resumeText);
     const resumeLines = generateResumePreview(resumeText);
+    console.log("RESUME LINES");
+console.log(resumeLines);
+
 
 const atsChecklist = [
   { label: "Email address",            ok: intelligence.contact.email },
@@ -190,6 +193,21 @@ console.log(
     2
   )
 );
+await prisma.resumeAnalysis.create({
+  data: {
+    userId: "anonymous", // will replace with Clerk later
+
+    fileName: file.name,
+
+    role: roleResult.role,
+
+    atsScore: atsResult.atsCompliance.score,
+
+    resumeText,
+
+    analysisData,
+  },
+});
     return NextResponse.json({
       
       success: true,
