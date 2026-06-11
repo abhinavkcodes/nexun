@@ -2,76 +2,7 @@ import { useState, useEffect } from "react";
 import { ReactNode } from "react";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_DATA = {
-  fileName: "John_Doe_Resume.pdf",
-  jobTitle: "Full Stack Developer",
-  resumeStrength: "Good",
-  overallScore: 74,
-  atsScore: 78,
-  roleMatchScore: 75,
-  experienceScore: 65,
-  projectScore: 72,
-  impactScore: 62,
-  keywordScore: 68,
-  wordCount: 487,
-  pageCount: 1,
-  recruiterSummary:
-    "Good candidate with relevant skills. Strong project work is offset by limited quantification and missing certifications. Address skill gaps before applying broadly.",
-  matchedSkills: ["React", "Node.js", "MongoDB", "PostgreSQL", "REST API", "Git", "Express", "TypeScript"],
-  skillGaps: ["Next.js", "Docker", "Redis", "GraphQL"],
-  keywords: [
-    { word: "React", found: true }, { word: "Node.js", found: true },
-    { word: "TypeScript", found: true }, { word: "PostgreSQL", found: true },
-    { word: "Docker", found: false }, { word: "Kubernetes", found: false },
-    { word: "AWS", found: false }, { word: "GraphQL", found: false },
-    { word: "REST API", found: true }, { word: "MongoDB", found: true },
-    { word: "Git", found: true }, { word: "Next.js", found: false },
-    { word: "Redis", found: false }, { word: "Express", found: true },
-  ],
-  sections: [
-    { name: "Skills", status: "good" },
-    { name: "Experience", status: "warning" },
-    { name: "Projects", status: "good" },
-    { name: "Education", status: "good" },
-    { name: "Certifications", status: "missing" },
-    { name: "Achievements", status: "warning" },
-  ],
-  suggestions: [
-    "Add quantified achievements — e.g. 'Reduced API response time by 40%'",
-    "Include Docker and Kubernetes to pass DevOps-aware ATS filters",
-    "Add a Certifications section with AWS or Google Cloud credentials",
-    "Use stronger action verbs: 'Architected', 'Engineered', 'Optimized'",
-    "Link your GitHub profile and deployed project URLs",
-    "Add measurable project impact — users, downloads, or performance gains",
-  ],
-  experienceStrengths: ["Strong action-oriented descriptions", "Demonstrates ownership"],
-  experienceWeaknesses: ["Few quantified achievements", "Limited leadership signals"],
-  projectStrengths: ["Strong technical depth", "Projects appear deployed"],
-  projectWeaknesses: ["Projects lack measurable outcomes"],
-  redFlags: ["Several important skills are missing", "No certifications found"],
-  // Mock resume text lines for preview
-  resumeLines: [
-    { type: "name",    text: "John Doe" },
-    { type: "contact", text: "john@email.com  •  +1 (555) 123-4567  •  github.com/johndoe" },
-    { type: "section", text: "EXPERIENCE" },
-    { type: "role",    text: "Software Engineer  —  Acme Corp" },
-    { type: "date",    text: "Jan 2023 – Present" },
-    { type: "bullet",  text: "Built REST APIs serving 10k+ daily requests using Node.js" },
-    { type: "bullet",  text: "Developed React dashboards improving user engagement" },
-    { type: "bullet",  text: "Integrated PostgreSQL with optimized query performance" },
-    { type: "section", text: "PROJECTS" },
-    { type: "role",    text: "E-Commerce Platform" },
-    { type: "bullet",  text: "Full-stack app with auth, payments (Stripe), MongoDB" },
-    { type: "bullet",  text: "Deployed on Vercel, 200+ active users" },
-    { type: "role",    text: "Task Manager API" },
-    { type: "bullet",  text: "RESTful API with Express, JWT auth, PostgreSQL" },
-    { type: "section", text: "TECHNICAL SKILLS" },
-    { type: "skills",  text: "React, Node.js, TypeScript, MongoDB, PostgreSQL, Git, Express, REST API" },
-    { type: "section", text: "EDUCATION" },
-    { type: "role",    text: "B.Tech Computer Science  —  State University" },
-    { type: "date",    text: "2019 – 2023" },
-  ],
-};
+
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function scoreColor(s: number) {
@@ -351,20 +282,23 @@ export default function NexunDashboard({
   analysisData,
 }: AnalysisDashboardProps) {
   const [tab, setTab] = useState("overview");
- const safeData = {
-  matchedSkills: [],
-  skillGaps: [],
-  suggestions: [],
-  redFlags: [],
-  keywords: [],
-  sections: [],
-  atsChecklist: [],
-  experienceStrengths: [],
-  experienceWeaknesses: [],
-  projectStrengths: [],
-  projectWeaknesses: [],
-  ...analysisData,
-};
+
+  if (!analysisData) {
+    return (
+      <div
+        style={{
+          padding: 40,
+          textAlign: "center",
+        }}
+      >
+        No analysis data available
+      </div>
+    );
+  }
+
+  console.log("REAL ANALYSIS:", analysisData);
+
+  const safeData = analysisData;
 console.log("REAL ANALYSIS:", analysisData);
 console.log("MATCHED SKILLS:", safeData.matchedSkills);
 console.log("RED FLAGS:", safeData.redFlags);
@@ -550,7 +484,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
       color: "#111",
     }}
   >
-    {safeData.parseSuccess ?? 96}%
+    {safeData.parseSuccess ?? "--"}%
   </div>
 
   <div
@@ -567,7 +501,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
     style={{
       fontSize: 11,
       color:
-        (safeData.parseSuccess ?? 96) >= 90
+        (safeData.parseSuccess ?? 0) >= 90
           ? "#15803d"
           : "#d97706",
       fontWeight: 600,
@@ -575,7 +509,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
       display: "block",
     }}
   >
-    {(safeData.parseSuccess ?? 96) >= 90
+    {(safeData.parseSuccess ?? 0) >= 90
       ? "✓ Successfully parsed"
       : "⚠ Some sections may not be detected"}
   </span>

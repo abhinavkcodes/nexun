@@ -1,5 +1,7 @@
 import { analyzeSections, SectionAnalysis } from "./sectionAnalyzer";
 import { analyzeATSCompliance } from "./atsCompliance";
+import type { ResumeIntelligenceResult }
+from "./resumeIntelligence";
 
 // ─── Strict input types (replace `any` with these) ──────────────────────────
 
@@ -122,7 +124,7 @@ function buildRecruiterSummary(
   score: number,
   redFlags: string[],
   roleAnalysis: RoleAnalysis,
-  intelligence: ResumeIntelligence,
+  intelligence: ResumeIntelligenceResult,
 ): string {
   const hasRedFlags    = redFlags.length > 0;
   const missingCount   = roleAnalysis.missingSkills.length;
@@ -168,7 +170,7 @@ function buildRecruiterSummary(
 export function analyzeATS(
   resumeText: string,
   roleAnalysis: RoleAnalysis,
-  intelligence: ResumeIntelligence,
+  intelligence: ResumeIntelligenceResult,
 ): ATSResult {
 
   // ── 1. Delegate to sub-analyzers ──────────────────────────────────────────

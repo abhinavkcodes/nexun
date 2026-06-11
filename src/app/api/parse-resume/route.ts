@@ -139,6 +139,7 @@ const atsChecklist = [
 
   overallScore: atsResult.overallScore,
   atsScore: atsResult.atsCompliance.score,
+  parseSuccess: intelligence.parseSuccess,
 
   experienceScore: atsResult.experienceScore,
   projectScore: atsResult.projectScore,

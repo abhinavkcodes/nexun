@@ -48,7 +48,7 @@ export interface ResumeIntelligenceResult {
   projectScore: number;
   metricsScore: number;
   achievementScore: number;
-
+keywordDensityScore: number;
   // Detailed analyses
   readability: ReadabilityAnalysis;
   resumeLength: ResumeLengthAnalysis;
@@ -486,87 +486,79 @@ function calcAchievementScore(text: string): number {
 function calcParseScore(
   contact: ContactInfo,
   sections: ReturnType<typeof analyzeSections>,
-  wordCount: number,
   resumeLength: ResumeLengthAnalysis,
   readability: ReadabilityAnalysis,
-  uniqueMetrics: string[],
-  experienceScore: number,
-  projectScore: number,
-  ats: ATSAnalysis
+  ats: ATSAnalysis,
+  wordCount: number
 ): number {
 
   let score = 0;
 
-  // ── PILLAR 1: Contact Completeness (20 pts) ───────────────────────────────
-  if (contact.email)     score += 7;  // critical — missing = ATS can't route
-  if (contact.phone)     score += 5;
-  if (contact.linkedin)  score += 4;
-  if (contact.github)    score += 2;
-  if (contact.portfolio) score += 2;
+  // ──────────────────────────────
+  // 1. Contact Extraction (20)
+  // ──────────────────────────────
 
-  // ── PILLAR 2: Section Detectability (25 pts) ─────────────────────────────
-  if (sections.experience.found)           score += 7;
-  if (sections.skills.found)               score += 5;
-  if (sections.education.found)            score += 5;
-  if (sections.projects.found)             score += 4;
-  if ((sections as any).professionalSummary?.found) score += 2;
-  if (sections.certifications.found)       score += 1;
-  if (sections.achievements.found)         score += 1;
+  if (contact.email) score += 8;
+  if (contact.phone) score += 6;
+  if (contact.linkedin) score += 3;
+  if (contact.github || contact.portfolio) score += 3;
 
-  // ── PILLAR 3: Content Quality (20 pts) ───────────────────────────────────
-  // Quantified metrics — most important content signal
-  if (uniqueMetrics.length >= 5)      score += 8;
-  else if (uniqueMetrics.length >= 3) score += 6;
-  else if (uniqueMetrics.length >= 1) score += 3;
+  // ──────────────────────────────
+  // 2. Section Recognition (25)
+  // ──────────────────────────────
 
-  // Average quality across key sections
-  const expQ  = sections.experience.found ? sections.experience.score  : 0;
-  const projQ = sections.projects.found   ? sections.projects.score    : 0;
-  const sklQ  = sections.skills.found     ? sections.skills.score      : 0;
-  const avgQ  = (expQ + projQ + sklQ) / 3;
+  if (sections.experience.found) score += 8;
+  if (sections.education.found) score += 5;
+  if (sections.skills.found) score += 5;
+  if (sections.projects.found) score += 4;
+  if (sections.certifications.found) score += 3;
 
-  if (avgQ >= 70)      score += 8;
-  else if (avgQ >= 50) score += 5;
-  else if (avgQ >= 30) score += 2;
+  // ──────────────────────────────
+  // 3. Date Parsing (15)
+  // ──────────────────────────────
 
-  // Well-rounded resume bonus (section count)
-  const sectionCount = [
-    sections.experience.found,
-    sections.skills.found,
-    sections.education.found,
-    sections.projects.found,
-    sections.certifications.found,
-    sections.achievements.found,
-    (sections as any).professionalSummary?.found,
-    (sections as any).leadership?.found,
-  ].filter(Boolean).length;
+  const dateMatches =
+    (sections.experience.content.match(
+      /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})\b/gi
+    ) ?? []).length;
 
-  if (sectionCount >= 6)      score += 4;
-  else if (sectionCount >= 4) score += 2;
+  score += Math.min(15, dateMatches * 2);
 
-  // ── PILLAR 4: ATS Compatibility (20 pts) ─────────────────────────────────
-  if (ats.score >= 85)      score += 20;
-  else if (ats.score >= 70) score += 15;
-  else if (ats.score >= 55) score += 10;
-  else if (ats.score >= 40) score += 5;
-  if (ats.risk === "high")  score -= 5; // heavy penalty for table/image-heavy resumes
+  // ──────────────────────────────
+  // 4. ATS Formatting (20)
+  // ──────────────────────────────
 
-  // ── PILLAR 5: Readability & Format (15 pts) ──────────────────────────────
-  // Grade level (resume ideal: 10–14)
-  const grade = readability.gradeLevel;
-  if (grade >= 9 && grade <= 14)      score += 5;
-  else if (grade >= 7 && grade <= 16) score += 3;
+  score += Math.round(ats.score * 0.20);
 
-  // Length appropriateness
-  if (resumeLength.status === "ideal")           score += 5;
-  else if (resumeLength.status === "acceptable") score += 3;
+  // ──────────────────────────────
+  // 5. Structure (10)
+  // ──────────────────────────────
 
-  // Bullet density (structured content parses better)
-  if (readability.bulletCount >= 10)     score += 5;
-  else if (readability.bulletCount >= 5) score += 3;
-  else if (readability.bulletCount >= 2) score += 1;
+  score += Math.round(
+    calcStructureScore(sections) * 0.10
+  );
 
-  return Math.min(100, Math.max(0, Math.round(score)));
+  // ──────────────────────────────
+  // 6. Content Density (10)
+  // ──────────────────────────────
+
+  let densityScore = 0;
+
+  if (wordCount < 150)
+    densityScore = 2;
+  else if (wordCount < 300)
+    densityScore = 5;
+  else if (wordCount < 800)
+    densityScore = 10;
+  else
+    densityScore = 8;
+
+  score += densityScore;
+
+  return Math.max(
+    0,
+    Math.min(100, Math.round(score))
+  );
 }
 // ─────────────────────────────────────────────────────────────────────────────
 // Overall Weighted Score
@@ -648,10 +640,14 @@ const ats = analyzeATS(resumeText, readability.bulletCount, wordCount, resumeLen
   const structureScore  = calcStructureScore(sections);
   const achievementScore = calcAchievementScore(resumeText);
 
-  const parseSuccess = calcParseScore(
-    contact, sections, wordCount, resumeLength,
-    readability, uniqueMetrics, experienceScore, projectScore, ats
-  );
+ const parseSuccess = calcParseScore(
+  contact,
+  sections,
+  resumeLength,
+  readability,
+  ats,
+  wordCount
+);
 
   const overallScore = calcOverallScore(
   structureScore, experienceScore, projectScore, metricsScore,
@@ -667,6 +663,7 @@ const ats = analyzeATS(resumeText, readability.bulletCount, wordCount, resumeLen
     too_short:   "warning",
     too_long:    "long",
   };
+  const keywordDensityScore = 75;
 
   return {
     structureScore,
@@ -679,6 +676,7 @@ const ats = analyzeATS(resumeText, readability.bulletCount, wordCount, resumeLen
     resumeLength,
     ats,
     contact,
+  keywordDensityScore,
 
     overallScore,
     parseSuccess,
