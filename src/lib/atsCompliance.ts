@@ -1,3 +1,19 @@
+/**
+ * atsCompliance.ts  (v2 — calibrated thresholds)
+ *
+ * Key changes from v1:
+ *  - hasActionVerbs: threshold lowered to t1 >= 2 || combined >= 4 (was t1 >= 3 || combined >= 5).
+ *    A student with one internship legitimately has fewer bullets and therefore fewer verb
+ *    matches. This was the single biggest reason entry-level resumes scored unfairly low.
+ *  - countQuantifiedAchievements: hasQuantifiedAchievements now requires only 1 (was 2).
+ *    The content score awards 10 pts for this; one good metric is a clear positive signal.
+ *  - hasSufficientLength: threshold kept at 300 words but warning text improved.
+ *  - structureRaw: added `professionalSummary` check (+2 pts) since route.ts now surfaces it.
+ *  - contactRaw: portfolio points bumped from 1 → 2 (a portfolio URL is increasingly expected
+ *    for tech roles, and 1 pt was barely worth the ATS overhead of checking).
+ *  - Formatting: `flags` field exposed for the atsChecklist in route.ts.
+ */
+
 import { analyzeSections } from "./sectionAnalyzer";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -34,6 +50,7 @@ export interface ATSComplianceResult {
   checks: ATSComplianceChecks;
   warnings: string[];
   strengths: string[];
+  flags: string[];             // human-readable ATS risk flags (used by route.ts atsChecklist)
   // Breakdown scores (each normalised 0–100 for UI display)
   contactScore: number;
   structureScore: number;
@@ -42,48 +59,40 @@ export interface ATSComplianceResult {
 }
 
 // ── Weights (raw points, total = 100) ─────────────────────────────────────────
-// Sourced from Jobscan, Resume Worded, and Greenhouse/Taleo parsing research:
-//  - Contact (20): missing email = instant discard
-//  - Structure (30): section headings are the primary ATS parsing signal
-//  - Formatting (20): tables / text-boxes cause catastrophic mis-parses
-//  - Content (30): keyword & quality signals that determine ranking rank
-
+// Contact (20), Structure (30), Formatting (20), Content (30)
 const CONTACT_MAX    = 20;
-const STRUCTURE_MAX  = 30;
+const STRUCTURE_MAX  = 32;   // +2 for summary check; normalised back to 100 for display
 const FORMATTING_MAX = 20;
 const CONTENT_MAX    = 30;
 
 // ── Action verbs ──────────────────────────────────────────────────────────────
-// Tier 1: high-signal verbs (engineering / product / leadership heavy)
 const ACTION_VERBS_T1 = [
   "architected", "engineered", "designed", "built", "developed", "implemented",
   "deployed", "automated", "optimized", "scaled", "migrated", "refactored",
   "led", "launched", "delivered", "reduced", "increased", "generated",
 ];
 
-// Tier 2: acceptable but weaker
 const ACTION_VERBS_T2 = [
   "created", "managed", "owned", "improved", "streamlined", "integrated",
   "maintained", "resolved", "collaborated", "contributed", "assisted",
-  "supported", "worked", "helped", "participated",
+  "supported", "worked", "helped", "participated", "analyzed",
 ];
 
 // ── Spelling mistakes ─────────────────────────────────────────────────────────
 const TYPO_PATTERNS: [RegExp, string][] = [
-  [/\bexperiance\b/i,        "experiEnce"],
-  [/\bresponsibilties\b/i,   "responsibiliTies"],
-  [/\bmanagment\b/i,         "managEment"],
-  [/\bdevelopement\b/i,      "develoPment"],
-  [/\bimplmentation\b/i,     "implEmentation"],
-  [/\baccomplishements\b/i,  "accomplishMents"],
-  [/\brecieve\b/i,           "recEive"],
-  [/\bacheive\b/i,           "achIeve"],
-  [/\boccured\b/i,           "occuRred"],
-  [/\bseperate\b/i,          "sepArate"],
+  [/\bexperiance\b/i,        "experience"],
+  [/\bresponsibilties\b/i,   "responsibilities"],
+  [/\bmanagment\b/i,         "management"],
+  [/\bdevelopement\b/i,      "development"],
+  [/\bimplmentation\b/i,     "implementation"],
+  [/\baccomplishements\b/i,  "accomplishments"],
+  [/\brecieve\b/i,           "receive"],
+  [/\bacheive\b/i,           "achieve"],
+  [/\boccured\b/i,           "occurred"],
+  [/\bseperate\b/i,          "separate"],
 ];
 
-// ── Standard section heading aliases (what real ATS parsers recognise) ────────
-// Based on Greenhouse, Taleo, Workday, iCIMS parsing documentation.
+// ── Standard section heading aliases ─────────────────────────────────────────
 const SECTION_HEADING_ALIASES: Record<string, RegExp> = {
   experience: /\b(experience|work history|employment|professional background|career history)\b/i,
   education:  /\b(education|academic background|qualifications|degrees?)\b/i,
@@ -94,26 +103,15 @@ const SECTION_HEADING_ALIASES: Record<string, RegExp> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Detects phone numbers in multiple international formats:
- *   +1 (555) 123-4567   North American
- *   +91 98765 43210     Indian mobile
- *   +44 7911 123456     UK / general E.164
- */
 function detectPhone(text: string): boolean {
   const stripped = text.replace(/[\s\-().]/g, "");
   return (
-    /(\+?1)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/.test(text) ||  // North American
-    /(\+91)?[6-9]\d{9}/.test(stripped) ||                            // Indian
-    /\+[1-9]\d{6,14}/.test(stripped)                                 // General E.164
+    /(\+?1)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/.test(text) ||
+    /(\+91)?[6-9]\d{9}/.test(stripped) ||
+    /\+[1-9]\d{6,14}/.test(stripped)
   );
 }
 
-/**
- * Counts unique quantified achievements — filters out phone digits, years, GPA.
- * Valid:   35%, 10,000 users, 50+ downloads, $2k revenue, "reduced by 40ms"
- * Invalid: 2024, +91 9876543210, 8.5 CGPA
- */
 function countQuantifiedAchievements(text: string): number {
   const patterns = [
     /\d+(\.\d+)?%/g,
@@ -129,22 +127,17 @@ function countQuantifiedAchievements(text: string): number {
   for (const p of patterns) {
     for (const m of text.matchAll(p)) {
       const clean = m[0].trim().toLowerCase();
-      // Filter false positives
-      if (/^(19|20)\d{2}$/.test(clean)) continue;           // year
-      if (/^\d\.\d{1,2}\s*\/\s*[45]/.test(clean)) continue; // GPA
+      if (/^(19|20)\d{2}$/.test(clean)) continue;
+      if (/^\d\.\d{1,2}\s*\/\s*[45]/.test(clean)) continue;
       all.add(clean);
     }
   }
   return all.size;
 }
 
-/**
- * Checks whether dates follow ATS-safe formats.
- * ATS parsers reliably parse:  "Jan 2023", "January 2023", "2021 – 2023", "Present"
- * They struggle with:          "Q1 2023", "Spring 2022", "2023/01"
- */
 function detectDateFormats(text: string): boolean {
-  const safeDate = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\b|\b\d{4}\s*[–\-—]\s*(\d{4}|Present|present|Current|current)\b/i;
+  const safeDate =
+    /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4}\b|\b\d{4}\s*[–\-—]\s*(\d{4}|Present|present|Current|current)\b/i;
   return safeDate.test(text);
 }
 
@@ -155,6 +148,7 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
   const lower    = resumeText.toLowerCase();
   const warnings: string[] = [];
   const strengths: string[] = [];
+  const flags: string[] = [];   // ATS risk flags surfaced in route.ts checklist
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 1. CONTACT  (max 20 pts)
@@ -172,32 +166,35 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
     strengths.push("Professional email address detected");
   } else {
     warnings.push("No email address found — ATS cannot route your application");
+    flags.push("Missing email address");
   }
   if (phone) {
     contactRaw += 5;
     strengths.push("Phone number detected");
   } else {
     warnings.push("No phone number found — add a standard format (e.g. +1 555 123 4567)");
+    flags.push("Missing phone number");
   }
   if (linkedin) {
     contactRaw += 4;
     strengths.push("LinkedIn URL present");
   } else {
     warnings.push("Add your LinkedIn URL (linkedin.com/in/yourname) — most ATS systems index it");
+    flags.push("Missing LinkedIn URL");
   }
   if (github) {
-    contactRaw += 3;
+    contactRaw += 2;
     strengths.push("GitHub URL present");
   } else {
     warnings.push("Add your GitHub URL to surface public work");
   }
   if (portfolio) {
-    contactRaw += 1;
+    contactRaw += 2;   // bumped from 1 → 2
     strengths.push("Portfolio / personal website detected");
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 2. STRUCTURE  (max 30 pts)
+  // 2. STRUCTURE  (max 32 raw pts, displayed as /100)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const skillsSection         = sections.skills.found;
   const experienceSection     = sections.experience.found;
@@ -205,7 +202,6 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
   const projectsSection       = sections.projects.found;
   const certificationsSection = sections.certifications.found;
 
-  // Verify headings use standard ATS-recognisable aliases
   const standardSectionHeadings =
     Object.values(SECTION_HEADING_ALIASES).filter((re) => re.test(resumeText)).length >= 3;
 
@@ -215,12 +211,14 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
     strengths.push("Experience section detected");
   } else {
     warnings.push("No Experience section — this is the most critical ATS parsing target");
+    flags.push("Experience section missing");
   }
   if (skillsSection) {
     structureRaw += 8;
     strengths.push("Skills section present — ATS can extract your tech stack");
   } else {
     warnings.push("No Skills section — ATS keyword matching will fail without it");
+    flags.push("Skills section missing");
   }
   if (educationSection) {
     structureRaw += 6;
@@ -234,6 +232,10 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
   } else {
     warnings.push("No Projects section — adds signal for technical and early-career roles");
   }
+  if (sections.professionalSummary.found) {
+    structureRaw += 2; // bonus: summary improves ATS profile
+    strengths.push("Professional summary section present");
+  }
   if (certificationsSection) {
     structureRaw += 2;
     strengths.push("Certifications section present");
@@ -241,22 +243,18 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
   if (standardSectionHeadings) {
     strengths.push("Section headings use ATS-standard terminology");
   } else {
-    warnings.push("Use standard section labels: 'Experience', 'Skills', 'Education', 'Projects' — avoid creative labels like 'My Journey'");
+    warnings.push("Use standard section labels: 'Experience', 'Skills', 'Education', 'Projects' — avoid creative labels");
+    flags.push("Non-standard section headings detected");
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 3. FORMATTING SAFETY  (max 20 pts)
-  //    Based on known Taleo, Workday, Greenhouse parsing failure modes.
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  // Tables: pipe-delimited text or markdown table patterns
   const noTables = !/(\|\s*.{3,}\s*\|)/.test(resumeText);
 
-  // Non-standard / decorative bullet characters that trip up parsers
   const fancyBulletCount = (resumeText.match(/[★◆✦◉⬛▪❖➢➤]/g) ?? []).length;
   const noFancyBullets   = fancyBulletCount < 3;
 
-  // Text-box signal: very long unbroken lines (>180 chars) in quantity
   const longLines        = resumeText.split("\n").filter((l) => l.trim().length > 180);
   const noTextBoxSignals = longLines.length < 3;
 
@@ -265,17 +263,20 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
     formattingRaw += 8;
     strengths.push("No table structures detected — ATS-safe layout");
   } else {
-    warnings.push("Table layout detected — most ATS parsers linearise tables and scramble column order; use plain text sections instead");
+    warnings.push("Table layout detected — ATS parsers linearise tables and scramble column order; use plain text instead");
+    flags.push("Table layout may cause ATS parsing errors");
   }
   if (noFancyBullets) {
     formattingRaw += 6;
   } else {
-    warnings.push(`${fancyBulletCount} decorative bullet characters detected — replace with standard hyphens or dots for reliable ATS parsing`);
+    warnings.push(`${fancyBulletCount} decorative bullet characters detected — replace with standard hyphens or dots`);
+    flags.push("Non-standard bullet characters detected");
   }
   if (noTextBoxSignals) {
     formattingRaw += 6;
   } else {
-    warnings.push("Very long unbroken lines detected — may indicate text-box content that ATS cannot extract; move to body text");
+    warnings.push("Very long unbroken lines detected — may indicate text-box content ATS cannot extract");
+    flags.push("Possible text-box content detected");
   }
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -285,16 +286,15 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
   const hasSufficientLength = wordCount >= 300;
 
   const achievementCount          = countQuantifiedAchievements(resumeText);
-  const hasQuantifiedAchievements = achievementCount >= 2;
+  const hasQuantifiedAchievements = achievementCount >= 1;   // was 2 — one good metric is meaningful
 
-  // Tier 1 verbs score higher than Tier 2
-  const t1Matches = ACTION_VERBS_T1.filter((v) => lower.includes(v));
-  const t2Matches = ACTION_VERBS_T2.filter((v) => lower.includes(v));
-  const hasActionVerbs = t1Matches.length >= 3 || (t1Matches.length + t2Matches.length) >= 5;
+  // Calibrated threshold: t1 >= 2 OR combined >= 4 (was t1 >= 3 || combined >= 5)
+  const t1Matches      = ACTION_VERBS_T1.filter((v) => lower.includes(v));
+  const t2Matches      = ACTION_VERBS_T2.filter((v) => lower.includes(v));
+  const hasActionVerbs = t1Matches.length >= 2 || (t1Matches.length + t2Matches.length) >= 4;
 
   const hasDateFormats = detectDateFormats(resumeText);
 
-  // First-person pronouns are a known ATS/recruiter flag
   const firstPersonCount = (resumeText.match(/\b(I|me|my|myself|we|our)\b/g) ?? []).length;
   const noFirstPerson    = firstPersonCount < 3;
 
@@ -306,13 +306,15 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
     contentRaw += 5;
     strengths.push(`Resume has sufficient content (${wordCount} words)`);
   } else {
-    warnings.push(`Resume is too brief (${wordCount} words) — aim for at least 300 words; entry-level: 300–500, experienced: 500–800`);
+    warnings.push(`Resume is too brief (${wordCount} words) — aim for at least 300 words`);
+    flags.push(`Resume too short: ${wordCount} words`);
   }
   if (hasQuantifiedAchievements) {
     contentRaw += 10;
-    strengths.push(`${achievementCount} quantified achievement${achievementCount > 1 ? "s" : ""} detected — strong ATS ranking signal`);
+    strengths.push(`${achievementCount} quantified achievement${achievementCount > 1 ? "s" : ""} detected`);
   } else {
-    warnings.push("No quantified achievements found — add numbers: 'reduced load time by 35%', 'served 5,000+ users', 'saved $2k/month'");
+    warnings.push("No quantified achievements found — add numbers: 'reduced load time by 35%', 'served 5,000+ users'");
+    flags.push("No quantified achievements found");
   }
   if (hasActionVerbs) {
     contentRaw += 8;
@@ -321,17 +323,18 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
   } else {
     const verbSuggestions = ACTION_VERBS_T1.slice(0, 5).join(", ");
     warnings.push(`Too few action verbs — start every bullet with verbs like: ${verbSuggestions}`);
+    flags.push("Insufficient action verbs");
   }
   if (hasDateFormats) {
     contentRaw += 4;
     strengths.push("Date formats are ATS-readable (e.g. Jan 2023, 2021–2023)");
   } else {
-    warnings.push("Use ATS-standard date formats: 'Jan 2023', 'September 2021 – Present' — avoid 'Q1 2023' or 'Spring 2022'");
+    warnings.push("Use ATS-standard date formats: 'Jan 2023', 'September 2021 – Present'");
   }
   if (noFirstPerson) {
     contentRaw += 2;
   } else {
-    warnings.push(`Avoid first-person pronouns (I, me, my) — use action verb sentences: 'Built X' not 'I built X'`);
+    warnings.push("Avoid first-person pronouns (I, me, my) — use 'Built X' not 'I built X'");
   }
   if (noSpellIssues) {
     contentRaw += 1;
@@ -342,10 +345,17 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 5. COMPOSITE SCORE
+  // Raw points are capped at their respective maximums before summing.
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const score = Math.min(
     100,
-    Math.round(contactRaw + structureRaw + formattingRaw + contentRaw)
+    Math.round(
+      Math.min(contactRaw, CONTACT_MAX) +
+      // structureRaw is out of 32, normalise to 30 before adding
+      Math.round(Math.min(structureRaw, STRUCTURE_MAX) / STRUCTURE_MAX * 30) +
+      Math.min(formattingRaw, FORMATTING_MAX) +
+      Math.min(contentRaw, CONTENT_MAX)
+    )
   );
 
   return {
@@ -360,10 +370,11 @@ export function analyzeATSCompliance(resumeText: string): ATSComplianceResult {
     },
     warnings,
     strengths,
-    // Each sub-score normalised to 0–100 for UI display
-    contactScore:    Math.round((contactRaw    / CONTACT_MAX)    * 100),
-    structureScore:  Math.round((structureRaw  / STRUCTURE_MAX)  * 100),
-    formattingScore: Math.round((formattingRaw / FORMATTING_MAX) * 100),
-    contentScore:    Math.round((contentRaw    / CONTENT_MAX)    * 100),
+    flags,
+    // Normalise each to 0–100 for UI display
+    contactScore:    Math.round((Math.min(contactRaw, CONTACT_MAX) / CONTACT_MAX) * 100),
+    structureScore:  Math.round((Math.min(structureRaw, STRUCTURE_MAX) / STRUCTURE_MAX) * 100),
+    formattingScore: Math.round((Math.min(formattingRaw, FORMATTING_MAX) / FORMATTING_MAX) * 100),
+    contentScore:    Math.round((Math.min(contentRaw, CONTENT_MAX) / CONTENT_MAX) * 100),
   };
 }

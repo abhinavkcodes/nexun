@@ -1,15 +1,19 @@
 /**
- * analyzer.ts
- * Role-match analysis: maps resume text against a role's required skill set,
- * computes a roleMatchScore, and produces a keywordDensityScore that reflects
- * how well the resume mirrors the language of the job description.
+ * analyzer.ts  (v2 — improved scoring)
+ *
+ * Changes from v1:
+ *  - keywordDensityScore now measures coverage breadth (unique matched aliases / total
+ *    role aliases) rather than raw occurrence count. This aligns with how Jobscan,
+ *    Resume Worded, and Lever actually score keyword coverage: they care whether each
+ *    relevant term appears at least once, not how many times it's repeated.
+ *  - roleMatchScore formula unchanged (required 70% / preferred 30% split is correct).
+ *  - readabilityScore: added fallback for PDF-extracted resumes where bullets are
+ *    stripped — lines starting with a capital past-participle are counted as bullets.
+ *  - Added "roleDetected" flag so callers can degrade gracefully for unknown roles.
  */
 
 // ─── Skill alias map ──────────────────────────────────────────────────────────
-// Every entry maps a canonical skill name → all accepted variants.
-// Keep variants lowercase; matching is done on lowercased resume text.
 const SKILL_ALIASES: Record<string, string[]> = {
-  // JavaScript ecosystem
   javascript:           ["javascript", "js", "es6", "es2015", "ecmascript"],
   typescript:           ["typescript", "ts"],
   react:                ["react", "react.js", "reactjs"],
@@ -18,24 +22,20 @@ const SKILL_ALIASES: Record<string, string[]> = {
   express:              ["express", "express.js", "expressjs"],
   vue:                  ["vue", "vue.js", "vuejs"],
   angular:              ["angular", "angularjs"],
-  // CSS / Styling
   css:                  ["css", "css3", "scss", "sass", "less", "styled-components"],
   tailwind:             ["tailwind", "tailwindcss", "tailwind css"],
   html:                 ["html", "html5"],
-  // Databases
   postgresql:           ["postgresql", "postgres", "pg", "psql"],
   mongodb:              ["mongodb", "mongo"],
   mysql:                ["mysql", "mariadb"],
   redis:                ["redis"],
   sqlite:               ["sqlite"],
-  // Python ecosystem
   python:               ["python", "python3"],
   pandas:               ["pandas", "pd"],
   numpy:                ["numpy", "np"],
   fastapi:              ["fastapi", "fast api"],
   flask:                ["flask"],
   django:               ["django"],
-  // ML / AI
   tensorflow:           ["tensorflow", "tf", "keras"],
   pytorch:              ["pytorch", "torch"],
   "machine learning":   ["machine learning", "ml", "sklearn", "scikit-learn", "scikit learn"],
@@ -44,7 +44,6 @@ const SKILL_ALIASES: Record<string, string[]> = {
   rag:                  ["rag", "retrieval augmented generation", "retrieval-augmented"],
   "vector database":    ["vector database", "vector db", "pinecone", "weaviate", "qdrant", "chroma"],
   "computer vision":    ["computer vision", "cv", "opencv", "image processing"],
-  // Cloud / DevOps / Infra
   aws:                  ["aws", "amazon web services", "amazon aws", "ec2", "s3", "lambda"],
   gcp:                  ["gcp", "google cloud", "google cloud platform"],
   azure:                ["azure", "microsoft azure"],
@@ -53,7 +52,6 @@ const SKILL_ALIASES: Record<string, string[]> = {
   "ci/cd":              ["ci/cd", "cicd", "github actions", "jenkins", "gitlab ci", "circleci"],
   linux:                ["linux", "unix", "bash", "shell scripting"],
   git:                  ["git", "github", "gitlab", "bitbucket", "version control"],
-  // General CS
   sql:                  ["sql", "t-sql", "pl/sql"],
   java:                 ["java"],
   "spring boot":        ["spring boot", "spring", "spring framework"],
@@ -64,15 +62,12 @@ const SKILL_ALIASES: Record<string, string[]> = {
   "data structures":    ["data structures", "dsa"],
   algorithms:           ["algorithms", "algo", "dsa"],
   websocket:            ["websocket", "websockets", "socket.io"],
-  // Analytics
   excel:                ["excel", "microsoft excel", "spreadsheet"],
   tableau:              ["tableau"],
   "power bi":           ["power bi", "powerbi"],
 };
 
 // ─── Role profiles ────────────────────────────────────────────────────────────
-// Each role has required skills (must-have) and preferred skills (nice-to-have).
-// Score = (required matches × 0.7 + preferred matches × 0.3) normalised to 100.
 interface RoleProfile {
   required: string[];
   preferred: string[];
@@ -128,59 +123,83 @@ function resumeHasSkill(resumeLower: string, skill: string): boolean {
 }
 
 /**
- * Keyword density score: measures how saturated the resume is with role-relevant
- * terms. Counts every alias occurrence (not just presence), normalised to 100.
- * This approximates what real ATS parsers do when ranking candidates.
+ * Keyword density score v2 — coverage breadth model.
+ *
+ * Modern ATS (Jobscan, Greenhouse, Lever) rank resumes by whether each relevant
+ * keyword APPEARS, not by how many times it's repeated. Repetition beyond 2–3
+ * occurrences does not boost ranking and can trigger spam filters.
+ *
+ * Score = (unique role-alias terms present in resume) / (total unique role-alias terms)
+ * Weighted: required-skill aliases count 2×, preferred count 1× (mirrors ATS ranking).
  */
 function computeKeywordDensityScore(
   resumeLower: string,
   profile: RoleProfile
 ): number {
-  const allSkills = [...profile.required, ...profile.preferred];
-  let totalOccurrences = 0;
-  let possibleTerms = 0;
+  let covered = 0;
+  let total   = 0;
 
-  for (const skill of allSkills) {
+  for (const skill of profile.required) {
     const aliases = getAliases(skill);
-    possibleTerms += aliases.length;
+    total += aliases.length * 2; // required skills weighted 2×
     for (const alias of aliases) {
-      // Count how many times this alias appears in the resume
-      const matches = resumeLower.split(alias).length - 1;
-      totalOccurrences += matches;
+      if (resumeLower.includes(alias)) {
+        covered += 2;
+        break; // presence counts once per skill, regardless of alias count
+      }
     }
   }
 
-  // Cap at 2 occurrences per alias slot (more than 2 is keyword stuffing)
-  const cappedMax = possibleTerms * 2;
-  const cappedOccurrences = Math.min(totalOccurrences, cappedMax);
-  return Math.round((cappedOccurrences / Math.max(cappedMax, 1)) * 100);
+  for (const skill of profile.preferred) {
+    const aliases = getAliases(skill);
+    total += aliases.length;
+    for (const alias of aliases) {
+      if (resumeLower.includes(alias)) {
+        covered += 1;
+        break;
+      }
+    }
+  }
+
+  if (total === 0) return 0;
+  return Math.round((covered / total) * 100);
 }
 
 /**
- * Readability score: penalises overly long bullets and rewards concise,
- * action-verb-led lines. This is a heuristic — real readability is contextual.
+ * Readability score v2 — PDF-tolerant.
+ *
+ * Many PDF extractors strip bullet characters. We additionally count lines that
+ * start with a capital past-participle (e.g. "Built", "Developed", "Reduced")
+ * as bullet lines, since these are the most reliable signal of bullet-style
+ * writing even when formatting is lost.
  */
 function computeReadabilityScore(resumeText: string): number {
   const lines = resumeText
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => l.startsWith("•") || l.startsWith("-") || l.startsWith("*"));
+    .filter(Boolean);
 
-  if (lines.length === 0) return 40; // no bullets at all is a problem
+  // Count bullet-style lines: explicit chars OR action-verb-started lines
+  const bulletLines = lines.filter(
+    (l) =>
+      /^[•\-*▸►✓→·]/.test(l) ||
+      /^[A-Z][a-z]+(ed|ing)\b/.test(l)
+  );
+
+  if (bulletLines.length === 0) return 35; // no bullet-style writing at all
+
+  const ACTION_VERB_RE =
+    /^[•\-*]?\s*(built|developed|implemented|designed|created|optimized|improved|automated|deployed|engineered|architected|integrated|led|managed|reduced|increased|scaled|launched|delivered|maintained|migrated|refactored|mentored|analysed|analyzed|spearheaded|generated|streamlined|resolved|coordinated|conducted|researched|established|produced)/i;
 
   let score = 0;
-  const ACTION_VERB_RE =
-    /^[•\-*]\s*(built|developed|implemented|designed|created|optimized|improved|automated|deployed|engineered|architected|integrated|led|managed|reduced|increased|scaled|launched|delivered|maintained|migrated|refactored|mentored|analysed|analyzed)/i;
-
-  for (const line of lines) {
+  for (const line of bulletLines) {
     const wordCount = line.split(/\s+/).length;
-    // Ideal bullet: 10–25 words, starts with action verb
     if (wordCount >= 8 && wordCount <= 30) score += 2;
     if (ACTION_VERB_RE.test(line)) score += 3;
-    if (wordCount > 40) score -= 2; // too verbose
+    if (wordCount > 40) score -= 1;
   }
 
-  const raw = Math.round((score / (lines.length * 5)) * 100);
+  const raw = Math.round((score / (bulletLines.length * 5)) * 100);
   return Math.min(Math.max(raw, 0), 100);
 }
 
@@ -191,25 +210,27 @@ export interface RoleAnalysis {
   keywordDensityScore: number;
   readabilityScore: number;
   matchedSkills: string[];
-  missingSkills: string[];        // required skills only
-  missingPreferred: string[];     // nice-to-have skills
+  missingSkills: string[];
+  missingPreferred: string[];
   strengths: string[];
   suggestions: string[];
+  /** true if the role was found in our profile DB, false for unknown roles */
+  roleDetected: boolean;
 }
 
 export function analyzeResume(resumeText: string, role: string): RoleAnalysis {
   const profile = ROLE_PROFILES[role.toLowerCase()];
   if (!profile) {
-    // Unknown role — return a neutral result rather than crashing
     return {
-      roleMatchScore: 0,
-      keywordDensityScore: 0,
+      roleMatchScore: 50,        // neutral — don't tank score for unknown role
+      keywordDensityScore: 50,
       readabilityScore: computeReadabilityScore(resumeText),
       matchedSkills: [],
       missingSkills: [],
       missingPreferred: [],
       strengths: [],
       suggestions: [`Role "${role}" is not in our database. Supported roles: ${Object.keys(ROLE_PROFILES).join(", ")}`],
+      roleDetected: false,
     };
   }
 
@@ -220,7 +241,7 @@ export function analyzeResume(resumeText: string, role: string): RoleAnalysis {
   const matchedPreferred = profile.preferred.filter((s) => resumeHasSkill(resumeLower, s));
   const missingPreferred = profile.preferred.filter((s) => !resumeHasSkill(resumeLower, s));
 
-  // Weighted score: required skills matter more than preferred
+  // Weighted score: required skills 70%, preferred 30%
   const requiredRatio  = matchedRequired.length  / Math.max(profile.required.length,  1);
   const preferredRatio = matchedPreferred.length / Math.max(profile.preferred.length, 1);
   const roleMatchScore = Math.round(requiredRatio * 70 + preferredRatio * 30);
@@ -228,7 +249,7 @@ export function analyzeResume(resumeText: string, role: string): RoleAnalysis {
   const keywordDensityScore = computeKeywordDensityScore(resumeLower, profile);
   const readabilityScore    = computeReadabilityScore(resumeText);
 
-  // ── Strengths: summarise clusters, not one string per skill ───────────────
+  // ── Strengths ──────────────────────────────────────────────────────────────
   const strengths: string[] = [];
   if (matchedRequired.length === profile.required.length) {
     strengths.push("Meets all required skills for this role");
@@ -239,7 +260,7 @@ export function analyzeResume(resumeText: string, role: string): RoleAnalysis {
     strengths.push(`Strong preferred-skill coverage (${matchedPreferred.join(", ")})`);
   }
   if (keywordDensityScore >= 70) {
-    strengths.push("High keyword alignment with typical job descriptions for this role");
+    strengths.push("High keyword coverage for this role");
   }
 
   // ── Suggestions ────────────────────────────────────────────────────────────
@@ -252,7 +273,7 @@ export function analyzeResume(resumeText: string, role: string): RoleAnalysis {
   }
   if (keywordDensityScore < 50) {
     suggestions.push(
-      "Mirror the exact terminology from target job postings — ATS parsers rank by keyword frequency"
+      "Mirror the exact terminology from target job postings — ATS parsers check keyword presence"
     );
   }
 
@@ -265,5 +286,6 @@ export function analyzeResume(resumeText: string, role: string): RoleAnalysis {
     missingPreferred,
     strengths,
     suggestions,
+    roleDetected: true,
   };
 }

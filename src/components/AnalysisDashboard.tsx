@@ -51,7 +51,7 @@ function AnimNum({
 
 // ── Big ATS ring ──────────────────────────────────────────────────────────────
 function ATSRing({ score }: { score: number }) {
-  const size = 150, stroke = 10;
+  const size = 140, stroke = 8;
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const [offset, setOffset] = useState(circ);
@@ -75,7 +75,7 @@ function ATSRing({ score }: { score: number }) {
           style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(0.22,1,0.36,1)", filter: `drop-shadow(0 0 6px ${color}60)` }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
-        <span style={{ fontSize: 40, fontWeight: 700, color: "#111", lineHeight: 1, letterSpacing: "-3px", fontFamily: "Inter, sans-serif" }}>
+        <span style={{ fontSize: 39, fontWeight: 700, color: "#111", lineHeight: 1, letterSpacing: "-3px", fontFamily: "Inter, sans-serif" }}>
           <AnimNum to={score} />
         </span>
         <span style={{ fontSize: 11, color: "#AAA", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, marginTop: 3 }}>Resume Score</span>
@@ -390,8 +390,21 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 >
 
           {/* ── HERO CARD: Big ATS Score + quick insights ── */}
-          <div style={{ background: "#fff", border: "1px solid #E5E5E3", borderRadius: 16, padding: "28px 28px 24px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 32, alignItems: "center" }}>
-            {/* Big ring — THE hero element */}
+<div
+  style={{
+    background: "#fff",
+    border: "1px solid #E5E5E3",
+    borderRadius: 14,
+
+    padding: "18px 20px",
+
+    display: "grid",
+    gridTemplateColumns: "180px 1fr",
+
+    gap: 20,
+    alignItems: "center",
+  }}
+>            {/* Big ring — THE hero element */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
              <ATSRing score={safeData.overallScore} />
               <span style={{
@@ -408,7 +421,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
                 <p style={{ fontSize: 20, fontWeight: 700, color: "#111", letterSpacing: "-0.5px", fontFamily: "'Instrument Serif', Georgia, serif" }}>{safeData.jobTitle}</p>
               </div>
 
-              <p style={{ fontSize: 13, color: "#666", lineHeight: 1.6, marginBottom: 18, fontStyle: "italic", borderLeft: "2px solid #E5E5E3", paddingLeft: 12 }}>
+              <p style={{ fontSize: 13, color: "#666", lineHeight: 1.6, marginBottom: 12, fontStyle: "italic", borderLeft: "2px solid #E5E5E3", paddingLeft: 12 }}>
                 "{safeData.recruiterSummary}"
               </p>
 
@@ -427,7 +440,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
     style={{
       background: "#F7F7F6",
       borderRadius: 10,
-      padding: "12px 13px",
+padding: "10px 12px",
       border: "1px solid #EBEBEA",
     }}
   >
@@ -451,12 +464,12 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
 
     <div
       style={{
-        fontSize: 18,
-        fontWeight: 700,
+        fontSize: 15,
+fontWeight: 700,
         color: "#111",
       }}
     >
-      {safeData.pageCount}
+      
     </div>
 
     <div
@@ -488,7 +501,7 @@ console.log("ATS CHECKLIST:", safeData.atsChecklist);
   style={{
     background: "#F7F7F6",
     borderRadius: 10,
-    padding: "12px 13px",
+   padding: "10px 12px",
     border: "1px solid #EBEBEA",
   }}
 >
