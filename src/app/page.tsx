@@ -6,13 +6,22 @@ import {
   ChartNoAxesColumn
 } from "lucide-react";
 import Footer from "../components/footer";
-import Navbar from "../components/Navbar";
+
 import Link from "next/link";
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
-  
+  const searchParams = useSearchParams();
+
+useEffect(() => {
+  if (searchParams.get("upload") === "true") {
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      document.getElementById("resume-upload")?.click();
+    }, 300);
+  }
+}, [searchParams]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 const router = useRouter();
 

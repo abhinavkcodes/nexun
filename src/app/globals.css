@@ -2148,3 +2148,110 @@ html {
 html.is-edge .hero-marquee {
   margin-top: -40px;
 }
+/* ─────────────────────────────────────────────
+   PROFILE AVATAR + DROPDOWN
+───────────────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   PROFILE AVATAR + DROPDOWN
+───────────────────────────────────────────── */
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.10);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s ease;
+  padding: 0;
+}
+
+.profile-avatar:hover {
+  background: rgba(0,0,0,0.10);
+  border-color: rgba(0,0,0,0.16);
+}
+
+.profile-avatar svg {
+  width: 18px;
+  height: 18px;
+  color: #555;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px rgba(0,0,0,.04),
+    0 12px 32px rgba(0,0,0,.10);
+  padding: 6px;
+  z-index: 9999;
+  animation: dropdownFade .15s ease;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.profile-dropdown-email {
+  padding: 10px 12px 8px;
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 188px;
+}
+
+.profile-dropdown-divider {
+  height: 1px;
+  background: rgba(0,0,0,.06);
+  margin: 4px 0;
+}
+
+.profile-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #dc2626;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.profile-dropdown-item:hover {
+  background: #fff1f1;
+}
+/* Subtle Analyze Resume button */
+.analyze-btn {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  background: #111;
+  border-radius: 999px;
+}
+
+.analyze-btn:hover {
+  transform: none;
+  background: #000;
+  box-shadow: none;
+}
