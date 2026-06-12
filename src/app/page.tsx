@@ -106,7 +106,7 @@ const handleResumeUpload = async (
   disabled={isScanning}
   onClick={() => fileInputRef.current?.click()}
 >
-  {isScanning ? "Scanning Resume..." : "Analyze My Resume"}
+  {isScanning ? "Scanning Resume...." : " Upload your Resume"}
 </button>
 
  

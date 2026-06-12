@@ -106,19 +106,25 @@ export default function Navbar() {
               Log In
             </Link>
           )}
+          
 
-          <button
-            className="btn-primary analyze-btn"
-            onClick={() => {
-              document.getElementById("resume-upload")?.click();
-            }}
-          >
-            <span>Analyze Resume</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 12h14" />
-              <path d="M13 5l7 7-7 7" />
-            </svg>
-          </button>
+         <Link
+  href="/?upload=true"
+  className="btn-primary analyze-btn"
+>
+  <span>Analyze Resume</span>
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M5 12h14" />
+    <path d="M13 5l7 7-7 7" />
+  </svg>
+</Link>
         </div>
 
       </div>
