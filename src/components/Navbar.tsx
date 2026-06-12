@@ -36,10 +36,10 @@ export default function Navbar() {
           </Link>
 
           <Link
-           href="/signup"
+           href="/login"
             className="btn-primary"
           >
-            Sign Up
+            Get Started
           </Link>
 
         </div>
