@@ -5,6 +5,7 @@ import {
   Target,
   ChartNoAxesColumn
 } from "lucide-react";
+import Footer from "../components/footer";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -376,8 +377,12 @@ const handleResumeUpload = async (
     </details>
   </div>
 </section>
+<Footer />
 
 
     </main>
   );
+}// Detect Edge and add a class to <html>
+if (navigator.userAgent.includes('Edg/') && !navigator.userAgent.includes('Chrome/0')) {
+  document.documentElement.classList.add('is-edge');
 }
