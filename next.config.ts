@@ -51,6 +51,7 @@ const nextConfig: NextConfig = {
               // All forms must submit to your own origin
               "form-action 'self'",
               // Upgrade any accidental HTTP to HTTPS
+              "frame-ancestors 'none'",
               "upgrade-insecure-requests",
             ].join("; "),
           },
