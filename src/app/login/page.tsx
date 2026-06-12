@@ -9,26 +9,22 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
 
   const loginWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: "http://localhost:3000/dashboard",
-      },
-    });
-  };
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,  // ✅ dynamic
+    },
+  });
+};
 
-  const loginWithEmail = async () => {
-    if (!email) return;
-
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: "http://localhost:3000/dashboard",
-      },
-    });
-
+const loginWithEmail = async () => {
+  // ...
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,  // ✅ dynamic
+    },
+  });
     if (error) {
       setMessage(error.message);
     } else {
