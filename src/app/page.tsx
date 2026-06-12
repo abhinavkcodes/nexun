@@ -124,7 +124,14 @@ const handleResumeUpload = async (
   ATS Friendly • AI Powered • Recruiter Focused
 </div>
         </div>
-
+<input
+  id="resume-upload"
+  ref={fileInputRef}
+  type="file"
+  accept=".pdf,.doc,.docx"
+  style={{ display: "none" }}
+  onChange={handleResumeUpload}
+/>
         {/* RIGHT column — floating mock UI */}
         
           <div className="hero-right">
@@ -359,6 +366,7 @@ const handleResumeUpload = async (
         PDF, DOC, and DOCX files are fully supported.
       </p>
     </details>
+    
 
     <details className="faq-item">
       <summary>Is Nexun free?</summary>

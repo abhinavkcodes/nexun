@@ -1510,3 +1510,57 @@ html {
   height: 18px;
   display: block;
 }
+.analyze-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 11px 18px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: linear-gradient(
+    180deg,
+    #1a1a1a 0%,
+    #0f0f0f 100%
+  );
+
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+
+  cursor: pointer;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background .25s ease;
+
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.08) inset,
+    0 10px 24px rgba(0,0,0,.18);
+}
+
+.analyze-btn svg {
+  transition: transform .25s ease;
+}
+
+.analyze-btn:hover {
+  transform: translateY(-2px);
+
+  background: linear-gradient(
+    180deg,
+    #222 0%,
+    #141414 100%
+  );
+
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.08) inset,
+    0 16px 32px rgba(0,0,0,.25);
+}
+
+.analyze-btn:hover svg {
+  transform: translateX(3px);
+}
