@@ -9,23 +9,22 @@ import Footer from "../components/footer";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const searchParams = useSearchParams();
-
-useEffect(() => {
-  if (searchParams.get("upload") === "true") {
-    // Small delay to ensure DOM is ready
-    setTimeout(() => {
-      document.getElementById("resume-upload")?.click();
-    }, 300);
-  }
-}, [searchParams]);
+ 
   const fileInputRef = useRef<HTMLInputElement>(null);
 const router = useRouter();
 
 const [isScanning, setIsScanning] = useState(false);
+useEffect(() => {
+  if (
+    navigator.userAgent.includes("Edg/") &&
+    !navigator.userAgent.includes("Chrome/0")
+  ) {
+    document.documentElement.classList.add("is-edge");
+  }
+}, []);
 const handleResumeUpload = async (
   event: React.ChangeEvent<HTMLInputElement>
 ) => {
@@ -391,7 +390,4 @@ const handleResumeUpload = async (
 
     </main>
   );
-}// Detect Edge and add a class to <html>
-if (navigator.userAgent.includes('Edg/') && !navigator.userAgent.includes('Chrome/0')) {
-  document.documentElement.classList.add('is-edge');
 }
