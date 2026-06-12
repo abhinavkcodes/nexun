@@ -230,11 +230,9 @@ const COMPANY_BONUSES: Record<string, number> = {
 
 for (const [company, bonus] of Object.entries(COMPANY_BONUSES)) {
   const companyRegex = new RegExp(
-  `${company}.*?(intern|engineer|developer|analyst|researcher)|
-   (intern|engineer|developer|analyst|researcher).*?${company}`,
+  `${company}.*?(intern|engineer|developer|analyst|researcher)|(intern|engineer|developer|analyst|researcher).*?${company}`,
   "i"
 );
-
 if (companyRegex.test(experienceText)) {
     prestigeBonus = bonus;
     break;

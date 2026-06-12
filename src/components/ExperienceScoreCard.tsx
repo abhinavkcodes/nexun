@@ -12,7 +12,12 @@ export default function ExperienceScoreCard({ score, roleTitle = "the target rol
 
   const color = score >= 80 ? "#60a5fa" : score >= 60 ? "#fbbf24" : "#f87171";
   const tiers = ["Entry", "Junior", "Mid", "Senior", "Expert"];
-  const tierIndex = Math.min(Math.floor(score / 20), 4);
+  const tierIndex =
+  score >= 85 ? 4 :  // Expert
+  score >= 70 ? 3 :  // Senior
+  score >= 55 ? 2 :  // Mid
+  score >= 35 ? 1 :  // Junior
+  0;                 // Entr
 
   return (
     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "18px 20px" }}>

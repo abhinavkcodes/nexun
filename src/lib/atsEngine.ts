@@ -127,8 +127,8 @@ const THRESHOLDS = {
   weakExperience:      50,
   weakProject:         55,
   weakMetrics:         50,
-  redFlagExperience:   30,   // only flag truly empty experience (was 35)
-  redFlagProject:      30,   // only flag truly shallow projects (was 35)
+  redFlagExperience:   20,  
+  redFlagProject:      20,   
   missingSkillsMinor:   2,
   missingSkillsMajor:   4,
 } as const;
@@ -138,7 +138,7 @@ const HIGH_SIGNAL_COMPANIES = [
  "google",
  "amazon",
  "meta",
- "adobe",
+ "adobe", 
  "salesforce"
 ];
 

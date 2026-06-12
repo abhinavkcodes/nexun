@@ -340,7 +340,7 @@ function scoreSkillsSection(content: string): SectionResult {
   }
 
   const issues: string[] = [];
-  let score = 30;
+  let score = 20;
 
   const allSkills = content
     .split(/[\n,|•]/)
@@ -385,7 +385,7 @@ function scoreSkillsSection(content: string): SectionResult {
     issues.push("Skills section appears to contain prose — keep it as a concise, scannable list.");
   }
 
-  return { found: true, score: Math.min(score, 100), content, issues };
+  return { found: true, score: Math.min(score, 85), content, issues };
 }
 
 function scoreExperienceSection(content: string): SectionResult {
@@ -403,7 +403,7 @@ function scoreExperienceSection(content: string): SectionResult {
   const issues: string[] = [];
   // Raised base from 20 → 35. A student with one real internship shouldn't
   // start at 20 just because PDF strips bullet chars.
-  let score = 35;
+  let score = 15;
 
   const bulletCount = countBullets(content);
   if (bulletCount >= 6) score += 25;
@@ -451,7 +451,7 @@ function scoreProjectsSection(content: string): SectionResult {
 
   const issues: string[] = [];
   // Raised base from 25 → 35 for same reason as experience
-  let score = 35;
+  let score = 15;
 
   const bulletCount = countBullets(content);
   if (bulletCount >= 4) score += 15;
@@ -493,7 +493,7 @@ function scoreEducationSection(content: string): SectionResult {
   }
 
   const issues: string[] = [];
-  let score = 30; // FIX: was 40, base must be earned
+  let score = 20; // FIX: was 40, base must be earned
 
   const hasDegree =
     /(b\.?tech|b\.?e\.?|b\.?sc|m\.?tech|m\.?sc|bachelor|master|phd|mba|diploma|associate|b\.?a\.?|m\.?a\.?)/i.test(
@@ -537,7 +537,7 @@ function scoreCertificationsSection(content: string): SectionResult {
   }
 
   const issues: string[] = [];
-  let score = 30; // FIX: was 40
+  let score = 15; // FIX: was 40
 
   const wordCount = content.split(/\s+/).filter(Boolean).length;
   if (wordCount >= 30) score += 20;
@@ -577,7 +577,7 @@ function scoreAchievementsSection(content: string): SectionResult {
   }
 
   const issues: string[] = [];
-  let score = 25; // FIX: was 40
+  let score = 10; // FIX: was 40
 
   const wordCount = content.split(/\s+/).filter(Boolean).length;
   if (wordCount >= 30) score += 15;
@@ -627,7 +627,7 @@ function scoreLeadershipSection(content: string): SectionResult {
   }
 
   const issues: string[] = [];
-  let score = 30;
+  let score = 15;
 
   const wordCount = content.split(/\s+/).filter(Boolean).length;
   if (wordCount >= 40) score += 20;
@@ -658,7 +658,7 @@ function scoreLeadershipSection(content: string): SectionResult {
   if (hasYear) score += 10;
   else issues.push("Add dates to your leadership/activity entries.");
 
-  return { found: true, score: Math.min(score, 100), content, issues };
+  return { found: true, score: Math.min(score, 85), content, issues };
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────

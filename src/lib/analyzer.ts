@@ -141,18 +141,18 @@ function computeKeywordDensityScore(
 
   for (const skill of profile.required) {
     const aliases = getAliases(skill);
-    total += aliases.length * 2; // required skills weighted 2×
+    total += 2; // 2 points per required skill regardless of alias count
     for (const alias of aliases) {
       if (resumeLower.includes(alias)) {
         covered += 2;
-        break; // presence counts once per skill, regardless of alias count
+        break;
       }
     }
   }
 
   for (const skill of profile.preferred) {
     const aliases = getAliases(skill);
-    total += aliases.length;
+    total += 1; // 1 point per preferred skill regardless of alias count
     for (const alias of aliases) {
       if (resumeLower.includes(alias)) {
         covered += 1;

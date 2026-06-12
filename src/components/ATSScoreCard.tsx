@@ -10,7 +10,7 @@ export default function ATSScoreCard({ score }: ATSScoreCardProps) {
   useEffect(() => { const t = setTimeout(() => setBar(score), 150); return () => clearTimeout(t); }, [score]);
 
   const color = score >= 75 ? "#4ade80" : score >= 50 ? "#fbbf24" : "#f87171";
-  const label = score >= 75 ? "ATS Friendly" : score >= 50 ? "Needs Work" : "Poor Match";
+  const label = score >= 80 ? "ATS Friendly" : score >= 65 ? "Needs Work" : "Poor Match";
 
   return (
     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "18px 20px" }}>

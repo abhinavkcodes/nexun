@@ -259,27 +259,29 @@ export default function NexunDashboard({ analysisData }: AnalysisDashboardProps)
               return (
                 <div key={s.name}>
                   <div
-                    className="section-row"
-                    onClick={() => setExpandedSection(isExpanded ? null : s.name)}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "16px 1fr auto 90px",
-                      alignItems: "center",
-                      gap: 14,
-                      padding: "14px 24px",
-                      cursor: "pointer",
-                      borderBottom: !isLast || isExpanded ? "1px solid #F5F5F3" : "none",
-                    }}
-                  >
-                    <span style={{ fontSize: 9, color: "#AAA" }}>{isExpanded ? "▼" : "▶"}</span>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{s.name}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color }}>{score}%</span>
-                      <SectionLabel score={score} />
-                    </div>
-                    <Bar value={score} color={color} delay={i * 80} />
-                  </div>
+  className="section-row"
+  onClick={() => setExpandedSection(isExpanded ? null : s.name)}
+  style={{
+    display: "grid",
+    gridTemplateColumns: "16px 1fr 70px 100px",
+gap: 16,
+    alignItems: "center",
+   
+    padding: "14px 24px",
+    cursor: "pointer",
+    borderBottom: !isLast || isExpanded ? "1px solid #F5F5F3" : "none",
+  }}
+>
+  <span style={{ fontSize: 9, color: "#AAA" }}>{isExpanded ? "▼" : "▶"}</span>
+  <span style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{s.name}</span>
 
+  {/* Score as X/100 only, no label, no % */}
+  <span style={{ fontSize: 13, fontWeight: 700, color, minWidth: 48, textAlign: "right" }}>
+    {score}/100
+  </span>
+
+  <Bar value={score} color={color} delay={i * 80} />
+</div>
                   {isExpanded && (s.issues?.length ?? 0) > 0 && (
                     <div style={{
                       padding: "10px 24px 14px 54px",

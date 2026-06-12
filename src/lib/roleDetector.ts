@@ -20,11 +20,9 @@ const roleDatabase: Record<string, string[]> = {
     "postgresql", "full-stack", "fullstack", "api", "full stack",
   ],
   "Software engineer": [
-  "java",
-  "python",
+  
   "javascript",
-  "sql",
-  "git",
+  
   "algorithms",
   "data structures",
   "oop",
@@ -35,6 +33,9 @@ const roleDatabase: Record<string, string[]> = {
   "distributed systems",
   "microservices",
   "kubernetes",
+   "system design", "distributed systems", "microservices",
+  "algorithms", "data structures", "oop", "low latency",
+  "scalability", "object oriented", "concurrency",
 ],
   "data analyst": [
     "excel", "power bi", "tableau", "sql", "analytics",
@@ -170,9 +171,8 @@ export function detectRole(resumeText: string): RoleDetectionResult {
 
    const normalizedScore =
   score / keywords.length;
-
 if (normalizedScore > bestScore) {
-      let bestScore = 0;
+      bestScore = normalizedScore;
       bestRole = role;
       matchedKeywords = matches;
     }
@@ -182,13 +182,11 @@ if (normalizedScore > bestScore) {
   // Cap at 100
   const keywordCount = roleDatabase[bestRole]?.length ?? 1;
   const maxBoost = Object.values(roleBoosts[bestRole] ?? {}).reduce((a, b) => a + b, 0);
-  const confidence = Math.min(
-    100,
-    Math.round((bestScore / (keywordCount + maxBoost)) * 100)
-  );
-if (confidence < 65) {
-  bestRole = "Software engineer";
-}
+  const confidence = Math.min(100, Math.round(bestScore * 100));
+
+  if (confidence < 25) {
+    bestRole = "software engineer";
+  }
   return {
     role: bestRole,
     confidence,
